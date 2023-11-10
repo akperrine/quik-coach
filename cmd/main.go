@@ -1,11 +1,14 @@
 package main
 
 import (
-	"github.com/akperrine/quik-coach"
+	"github.com/akperrine/quik-coach/internal/controllers"
+	"github.com/akperrine/quik-coach/internal/db"
 )
 
 
 
 func main() {
-	http.handleRequests()
+	config.Connect()
+	http.HandleRequests()
+	
 }

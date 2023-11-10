@@ -1,4 +1,4 @@
-package routes
+package http
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "homepage Endpoint Hit")
 }
 
-func handleRequests() {
+func HandleRequests() {
 	http.HandleFunc("/", homePage)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
