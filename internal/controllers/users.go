@@ -8,8 +8,11 @@ import (
 	"net/http"
 
 	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
+
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var collection *mongo.Collection
@@ -18,7 +21,15 @@ func UserCollection(c *mongo.Database) {
 	collection = c.Collection("users")
 }
 
-func GetAllUsers(w http.ResponseWriter, r *http.Request) {
+func HandleRequests() {
+	http.HandleFunc("/users", getAllUsers)
+	http.HandleFunc("/users/register", registerUser)
+	http.HandleFunc("/health_check", healthCheck)
+	log.Fatal(http.ListenAndServe(":8000", nil))
+}
+
+
+func getAllUsers(w http.ResponseWriter, r *http.Request) {
 	users := []models.User{}
 
 	cursor, err := collection.Find(context.TODO(), bson.M{})
@@ -53,20 +64,33 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	writeJSONResponse(w, http.StatusOK, usersJSON)
 }
 
+func registerUser(w http.ResponseWriter, r *http.Request) {
+	user := &models.User{}
+	json.NewDecoder(r.Body).Decode(user)
+
+	encrptedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	user.ID = uuid.NewString()
+	user.Password = string(encrptedPass)
+
+    fmt.Printf("{ID: %s, FirstName: %s, LastName: %s, Email: %s}", user.ID, user.FirstName, user.LastName, user.Email)
+
+
+	createdUser, insErr := collection.InsertOne(context.TODO(), user)
+
+	if insErr != nil {
+		fmt.Printf("Error creating new user: %s", insErr)
+	}
+
+	json.NewEncoder(w).Encode(createdUser)
+}
+
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "healthy!")
 }
 
-func HandleRequests() {
-	http.HandleFunc("/", GetAllUsers)
-	http.HandleFunc("/health_check", healthCheck)
-	log.Fatal(http.ListenAndServe(":8000", nil))
-}
 
-func handleError(w http.ResponseWriter, status int, message string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	responseJSON, _ := json.Marshal(map[string]string{"error": message})
-	w.Write(responseJSON)
-}

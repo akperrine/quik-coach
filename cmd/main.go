@@ -14,4 +14,5 @@ func main() {
 	controllers.HandleRequests()
 
 	log.Fatal("Something went wrong...")
+
 }
