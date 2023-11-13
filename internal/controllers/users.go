@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 
@@ -99,20 +101,23 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
-	foundUser := findOne(user.Email, user.Password)
 
-	if foundUser.Email == "" || foundUser.Password == "" {
-		writeJSONResponse(w, http.StatusUnauthorized, []byte("Incorrect email or password"))
-	} else {
-		userJson, err := marshalWithoutPassword(foundUser)
-		if err != nil {
-			fmt.Println("Error: ", err)
-		}
-		writeJSONResponse(w, http.StatusOK, userJson)
-	}
+	response := findOne(user.Email, user.Password)
+
+	json.NewEncoder(w).Encode(response)
+
+	// if foundUser.Email == "" || foundUser.Password == "" {
+	// 	writeJSONResponse(w, http.StatusUnauthorized, []byte("Incorrect email or password"))
+	// } else {
+	// 	userJson, err := marshalWithoutPassword(foundUser)
+	// 	if err != nil {
+	// 		fmt.Println("Error: ", err)
+	// 	}
+	// 	writeJSONResponse(w, http.StatusOK, userJson)
+	// }
 }
 
-func findOne(email, password string) models.User{
+func findOne(email, password string) map[string]interface{}{
 	fmt.Println(password)
 	user := &models.User{}
 
@@ -122,10 +127,12 @@ func findOne(email, password string) models.User{
 	if err == mongo.ErrNoDocuments {
 		// No matching user found
 		fmt.Println("User not found")
-		return models.User{}
+		var resp = map[string]interface{}{"status": false, "message": "Email address not found"}
+		return resp
 	} else if err != nil {
 		log.Fatal(err)
-		return models.User{}
+		var resp = map[string]interface{}{"status": false, "message": "Invalid login credentials. Please try again"}
+		return resp
 	} else {
 		fmt.Printf("Found user: %+v\n", user)
 	}
@@ -134,10 +141,33 @@ func findOne(email, password string) models.User{
     if passwordErr != nil {
         // Passwords don't match
         fmt.Println("Invalid password")
-        return models.User{}
+		var resp = map[string]interface{}{"status": false, "message": "Invalid login credentials. Please try again"}
+		return resp
     }
 
-	return *user
+	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Minute * 100000))
+
+
+
+	claims := &models.Token{
+		UserID: user.ID,
+		Name:	user.FirstName,
+		Email:	user.Email,
+		RegisteredClaims: &jwt.RegisteredClaims{
+			ExpiresAt: expiresAt,
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, error := token.SignedString([]byte("secret"))
+	if error != nil {
+		fmt.Println(error)
+	}
+	var resp = map[string]interface{}{"status": false, "message": "logged in"}
+	resp["token"] = tokenString //Store the token in the response
+	resp["user"] = user
+	return resp
 }
 
 

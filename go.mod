@@ -3,6 +3,7 @@ module github.com/akperrine/quik-coach
 go 1.21.2
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.1.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
