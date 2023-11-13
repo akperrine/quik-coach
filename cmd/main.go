@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/akperrine/quik-coach/internal/controllers"
 	"github.com/akperrine/quik-coach/internal/db"
 )
@@ -9,6 +11,7 @@ import (
 
 func main() {
 	config.Connect()
-	http.HandleRequests()
-	
+	controllers.HandleRequests()
+
+	log.Fatal("Something went wrong...")
 }
