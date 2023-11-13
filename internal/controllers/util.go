@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+
 )
 
 func writeJSONResponse(w http.ResponseWriter, statusCode int, data []byte) {
@@ -17,3 +18,4 @@ func handleError(w http.ResponseWriter, status int, message string) {
 	responseJSON, _ := json.Marshal(map[string]string{"error": message})
 	w.Write(responseJSON)
 }
+
