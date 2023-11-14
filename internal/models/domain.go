@@ -1,6 +1,5 @@
 package models
 
-import "fmt"
 
 
 type User struct {
@@ -11,7 +10,11 @@ type User struct {
 	Password  string `json:"password,omitempty"`
  }
 
- func (u User) userToString() string {
-	return fmt.Sprintf("ID: %s, FirstName: %s, LastName: %s, Email: %s", u.ID, u.FirstName, u.LastName, u.Email)
-}
+ type UserRepository interface {
+
+ }
+
+ type UserService interface {}
+
+
 
