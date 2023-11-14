@@ -1,5 +1,11 @@
 package models
 
+import (
+	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+
 
 
 type User struct {
@@ -10,11 +16,16 @@ type User struct {
 	Password  string `json:"password,omitempty"`
  }
 
- type UserRepository interface {
+ type UserService interface {
+	FindAll() ([]byte, error)
+	CreateUser(user User) (*mongo.InsertOneResult, error)
+	FindOne(email, password string) map[string]interface{}
+}
 
- }
-
- type UserService interface {}
-
-
+type Token struct {
+	UserID string
+	Name string
+	Email string
+	*jwt.RegisteredClaims
+}
 

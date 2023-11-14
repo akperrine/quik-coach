@@ -2,10 +2,12 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
 	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -17,8 +19,48 @@ func UserCollection(c *mongo.Database) {
 	collection = c.Collection("users")
 }
 
+type service struct{}
 
-func FindOne(email, password string) map[string]interface{}{
+func NewUserService() models.UserService {
+	return &service{}
+}
+
+func (*service) FindAll() ([]byte, error) {
+	users := []models.User{}
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	
+	
+	for cursor.Next(context.Background()) {
+		var user models.User
+		if err := cursor.Decode(&user); err != nil {
+			log.Printf("Failed to decode user with error: %s", err)
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := cursor.Err(); err != nil {
+		log.Printf("Error during cursor iteration with error: %s", err)
+		return nil, err
+	}
+
+	jsonUsers, err := json.Marshal(users)
+	if err != nil {
+		log.Println("Failed to marshal users to JSON")
+		return nil, err
+	}
+
+	return jsonUsers, nil
+
+}
+
+func (*service) FindOne(email, password string) map[string]interface{}{
 	fmt.Println(password)
 	user := &models.User{}
 
@@ -59,4 +101,26 @@ func FindOne(email, password string) map[string]interface{}{
 	resp["token"] = tokenString //Store the token in the response
 	resp["user"] = user
 	return resp
+}
+
+func (*service) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
+	encrptedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	user.ID = uuid.NewString()
+	user.Password = string(encrptedPass)
+
+    fmt.Printf("{ID: %s, FirstName: %s, LastName: %s, Email: %s}", user.ID, user.FirstName, user.LastName, user.Email)
+
+
+	createdUser, err := collection.InsertOne(context.TODO(), user)
+	if createdUser != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return createdUser, nil
 }

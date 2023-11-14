@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/akperrine/quik-coach/internal/controllers"
 	"github.com/akperrine/quik-coach/internal/services"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,7 +29,6 @@ func Connect() {
 	  }
 
 	db := client.Database("o2_shark")  
-	controllers.UserCollection(db)
 	services.UserCollection(db)
 
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
