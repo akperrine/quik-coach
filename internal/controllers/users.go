@@ -105,16 +105,6 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	response := findOne(user.Email, user.Password)
 
 	json.NewEncoder(w).Encode(response)
-
-	// if foundUser.Email == "" || foundUser.Password == "" {
-	// 	writeJSONResponse(w, http.StatusUnauthorized, []byte("Incorrect email or password"))
-	// } else {
-	// 	userJson, err := marshalWithoutPassword(foundUser)
-	// 	if err != nil {
-	// 		fmt.Println("Error: ", err)
-	// 	}
-	// 	writeJSONResponse(w, http.StatusOK, userJson)
-	// }
 }
 
 func findOne(email, password string) map[string]interface{}{
@@ -145,6 +135,35 @@ func findOne(email, password string) map[string]interface{}{
 		return resp
     }
 
+	tokenString, tokenError := createToken(*user) 
+
+	if tokenError != nil {
+		var resp = map[string]interface{}{"status": false, "message": "Error creating token", "error": tokenError}
+		return resp
+	}
+
+	user.Password = ""
+	
+	var resp = map[string]interface{}{"status": false, "message": "logged in"}
+	resp["token"] = tokenString //Store the token in the response
+	resp["user"] = user
+	return resp
+}
+
+
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "healthy!")
+}
+
+func marshalWithoutPassword(u models.User) ([]byte, error) {
+	type user models.User
+	x := user(u)
+	x.Password = ""
+
+	return json.Marshal(x)
+}
+
+func createToken(user models.User) (string, error) {
 	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Minute * 100000))
 
 
@@ -164,21 +183,44 @@ func findOne(email, password string) map[string]interface{}{
 	if error != nil {
 		fmt.Println(error)
 	}
-	var resp = map[string]interface{}{"status": false, "message": "logged in"}
-	resp["token"] = tokenString //Store the token in the response
-	resp["user"] = user
-	return resp
+
+	return tokenString, nil
 }
 
-
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "healthy!")
+func verifyToken(tokenString string) error {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte("secret"), nil
+	 })
+	 
+	 if err != nil {
+		return err
+	 }
+	
+	 if !token.Valid {
+		return fmt.Errorf("invalid token")
+	 }
+	
+	 return nil
 }
 
-func marshalWithoutPassword(u models.User) ([]byte, error) {
-	type user models.User
-	x := user(u)
-	x.Password = ""
-
-	return json.Marshal(x)
-}
+// Testing
+// func ProtectedHandler(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+// 	tokenString := r.Header.Get("Authorization")
+// 	if tokenString == "" {
+// 	  w.WriteHeader(http.StatusUnauthorized)
+// 	  fmt.Fprint(w, "Missing authorization header")
+// 	  return
+// 	}
+// 	tokenString = tokenString[len("Bearer "):]
+	
+// 	err := verifyToken(tokenString)
+// 	if err != nil {
+// 	  w.WriteHeader(http.StatusUnauthorized)
+// 	  fmt.Fprint(w, "Invalid token")
+// 	  return
+// 	}
+	
+// 	fmt.Fprint(w, "Welcome to the the protected area")
+	
+//   }
