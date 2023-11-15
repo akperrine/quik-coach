@@ -17,15 +17,29 @@ type UserController struct {
 
 var collection *mongo.Collection
 
-func UserCollection(c *mongo.Database) {
+func UserCollection(c *mongo.Database) *mongo.Collection {
 	collection = c.Collection("users")
+	return collection
 }
 
-var userRepoistory = db.NewUserRepository(collection)
-var userService = services.NewUserService(userRepoistory)
+func NewUserController(database *mongo.Database) *UserController {
+	collection := UserCollection(database)
+
+	// Initialize repository with the MongoDB collection
+	userRepository := db.NewUserRepository(collection)
+
+	// Initialize service with the repository
+	userService := services.NewUserService(userRepository)
+
+	// Create UserController with the initialized service
+	return &UserController{
+		UserService: userService,
+	}
+}
+
 
 func (c *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := userService.FindAll()
+	users, err := c.UserService.FindAll()
 	if err != nil {
 		writeJSONResponse(w, http.StatusBadRequest, users)
 	}
@@ -37,7 +51,7 @@ func (c *UserController) registerUser(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
 	json.NewDecoder(r.Body).Decode(user)
 
-	_, err := userService.CreateUser(*user)
+	_, err := c.UserService.CreateUser(*user)
 
 
 	if err != nil {
@@ -58,15 +72,9 @@ func (c *UserController) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := userService.FindOne(user.Email, user.Password)
+	response := c.UserService.FindOne(user.Email, user.Password)
 
 	json.NewEncoder(w).Encode(response)
 }
 
 
-
-
-func NewUserController() *UserController {
-    return &UserController{
-    }
-}

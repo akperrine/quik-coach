@@ -12,6 +12,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var collection *mongo.Collection
+
+func UserCollection(c *mongo.Database) {
+	collection = c.Collection("users")
+}
+
+
 type userRepository struct {
 	collection *mongo.Collection
 }

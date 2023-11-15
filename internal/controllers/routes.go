@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/akperrine/quik-coach/internal/db"
 )
 
 func HandleRequests() {
-	userController := NewUserController()
+	db := db.Connect()
+	userController := NewUserController(db)
 
 	http.HandleFunc("/users", userController.GetAllUsers)
 	http.HandleFunc("/users/register", userController.registerUser)
