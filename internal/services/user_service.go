@@ -45,7 +45,7 @@ func (s *userService) FindOne(email, password string) map[string]interface{}{
 	user, err := s.userRepoistory.FindOneByEmail(email)
 	log.Println("use err ", user, err, email)
 
-	if err == mongo.ErrNilDocument {
+	if err == mongo.ErrNilDocument || err == mongo.ErrNoDocuments {
 		// No matching user found
 		log.Println("User not found")
 		var resp = map[string]interface{}{"status": false, "message": "Email address not found"}
