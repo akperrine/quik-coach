@@ -31,6 +31,7 @@ func (m *MockUserService) FindOne(email, password string) map[string]interface{}
 func (m *MockUserService) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
 	args := m.Called(user)
 
+	// Need to check nil because this method returns nil for an object currently
 	if args.Get(0) != nil {
 		return args.Get(0).(*mongo.InsertOneResult), args.Error(1)
 	}
