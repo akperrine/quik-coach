@@ -42,12 +42,10 @@ func (s *userService) FindOne(email, password string) map[string]interface{}{
 	fmt.Println(password)
 	user := &models.User{}
 
-
-	// err := collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(user)
 	user, err := s.userRepoistory.FindOneByEmail(email)
 	log.Println("use err ", user, err, email)
 
-	if err == mongo.ErrNilDocument {
+	if err == mongo.ErrNilDocument || err == mongo.ErrNoDocuments {
 		// No matching user found
 		log.Println("User not found")
 		var resp = map[string]interface{}{"status": false, "message": "Email address not found"}
@@ -85,6 +83,14 @@ func (s *userService) FindOne(email, password string) map[string]interface{}{
 }
 
 func (s *userService) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
+	email := user.Email
+	existingUser, _ := s.userRepoistory.FindOneByEmail(email)
+
+	if existingUser != nil {
+		return nil, fmt.Errorf("user with email %s already exists", email)
+	}
+
+	
 	return s.userRepoistory.Create(user)
 }
 
