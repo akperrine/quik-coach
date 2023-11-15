@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -13,4 +14,8 @@ func HandleRequests() {
 	http.HandleFunc("/users/login", userController.loginUser)
 	http.HandleFunc("/health_check", healthCheck)
 	log.Fatal(http.ListenAndServe(":8000", nil))
+}
+
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "healthy!")
 }

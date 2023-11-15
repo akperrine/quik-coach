@@ -54,9 +54,7 @@ func (c *UserController) loginUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "healthy!")
-}
+
 
 
 func NewUserController() *UserController {
