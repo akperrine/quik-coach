@@ -1,18 +1,17 @@
-package config
+package db
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"github.com/akperrine/quik-coach/internal/controllers"
-	"github.com/akperrine/quik-coach/internal/services"
+	// "github.com/akperrine/quik-coach/internal/controllers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Connect() {
+func Connect() *mongo.Database{
 	serverApi := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI("mongodb+srv://admin:letsgetrusty@cluster0.p80xcty.mongodb.net/?retryWrites=true&w=majority").SetServerAPIOptions(serverApi)
 
@@ -30,8 +29,7 @@ func Connect() {
 	  }
 
 	db := client.Database("o2_shark")  
-	controllers.UserCollection(db)
-	services.UserCollection(db)
-
+	
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
+	return db  
 }

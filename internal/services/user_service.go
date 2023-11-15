@@ -1,33 +1,55 @@
 package services
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
 	"github.com/akperrine/quik-coach/internal/models"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var collection *mongo.Collection
 
-func UserCollection(c *mongo.Database) {
-	collection = c.Collection("users")
+type userService struct{
+	userRepoistory models.UserRepository
+}
+
+func NewUserService(userRepository models.UserRepository) models.UserService {
+	return &userService{
+		userRepoistory: userRepository,
+	}
 }
 
 
-func FindOne(email, password string) map[string]interface{}{
+func (s *userService) FindAll() ([]byte, error) {
+	users, err := s.userRepoistory.FindAll()
+	if  err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	jsonUsers, err := json.Marshal(users)
+	if err != nil {
+		log.Println("Failed to marshal users to JSON")
+		return nil, err
+	}
+
+	return jsonUsers, nil
+}
+
+func (s *userService) FindOne(email, password string) map[string]interface{}{
 	fmt.Println(password)
 	user := &models.User{}
 
 
-	err := collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(user)
+	// err := collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(user)
+	user, err := s.userRepoistory.FindOneByEmail(email)
+	log.Println("use err ", user, err, email)
 
-	if err == mongo.ErrNoDocuments {
+	if err == mongo.ErrNilDocument {
 		// No matching user found
-		fmt.Println("User not found")
+		log.Println("User not found")
 		var resp = map[string]interface{}{"status": false, "message": "Email address not found"}
 		return resp
 	} else if err != nil {
@@ -35,10 +57,11 @@ func FindOne(email, password string) map[string]interface{}{
 		var resp = map[string]interface{}{"status": false, "message": "Invalid login credentials. Please try again"}
 		return resp
 	} else {
-		fmt.Printf("Found user: %+v\n", user)
+		log.Printf("Found user: %+v\n", &user)
 	}
-
+	log.Println(user.Password, password)
 	passwordErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	log.Println(passwordErr)
     if passwordErr != nil {
         // Passwords don't match
         fmt.Println("Invalid password")
@@ -60,3 +83,8 @@ func FindOne(email, password string) map[string]interface{}{
 	resp["user"] = user
 	return resp
 }
+
+func (s *userService) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
+	return s.userRepoistory.Create(user)
+}
+

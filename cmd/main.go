@@ -4,14 +4,17 @@ import (
 	"log"
 
 	"github.com/akperrine/quik-coach/internal/controllers"
-	"github.com/akperrine/quik-coach/internal/db"
+	// "github.com/akperrine/quik-coach/internal/db"
 )
 
 
 
 func main() {
-	config.Connect()
+	// var db = db.Connect()
+
 	controllers.HandleRequests()
+
+
 
 	log.Fatal("Something went wrong...")
 
