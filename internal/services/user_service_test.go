@@ -1,8 +1,6 @@
 package services
 
 import (
-	// "fmt"
-	"log"
 	"testing"
 
 	"github.com/akperrine/quik-coach/internal/models"
@@ -25,12 +23,10 @@ func (m *MockUserRepository) FindAll() ([]models.User, error) {
 }
 
 func (m *MockUserRepository) FindOneByEmail(email string) (*models.User, error) {
-	log.Println("in mock ", email)
-	// Mock implementation for FindOneByEmail function.
 	// Return a sample user for testing.
 	// Password is hashed password123 with 10 cost factor
 	if email == "john@example.com" {
-		user := &models.User{ID: "1", FirstName: "John", LastName: "Doe", Email: "john@example.com", Password: "$2y$10$leOQeHbg1eAn7q.UWzf78OB7LnxJvugZXQlDseWh3SmsJS7Q0A9LW"}
+		user := &models.User{ID: "1", FirstName: "John", LastName: "Doe", Email: "john@example.com", Password: "$2y$10$go8ZNp2w5TmjyiuoGRwJOOINZ9Qi1KWGZbAygqZc3/w84IxJSFcn6"}
 		return user, nil
 	} else {
 		return nil, mongo.ErrNilDocument
@@ -38,7 +34,6 @@ func (m *MockUserRepository) FindOneByEmail(email string) (*models.User, error) 
 }
 
 func (m *MockUserRepository) Create(user models.User) (*mongo.InsertOneResult, error) {
-	// Mock implementation for Create function.
 	// Return a sample InsertOneResult for testing.
 	result := &mongo.InsertOneResult{InsertedID: user.ID}
 	return result, nil
