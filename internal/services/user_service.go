@@ -10,12 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// var collection *mongo.Collection
-
-// func UserCollection(c *mongo.Database) {
-// 	collection = c.Collection("users")
-// }
-
 
 type userService struct{
 	userRepoistory models.UserRepository
@@ -51,11 +45,11 @@ func (s *userService) FindOne(email, password string) map[string]interface{}{
 
 	// err := collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(user)
 	user, err := s.userRepoistory.FindOneByEmail(email)
+	log.Println("use err ", user, err, email)
 
-
-	if err == mongo.ErrNoDocuments {
+	if err == mongo.ErrNilDocument {
 		// No matching user found
-		fmt.Println("User not found")
+		log.Println("User not found")
 		var resp = map[string]interface{}{"status": false, "message": "Email address not found"}
 		return resp
 	} else if err != nil {
@@ -63,10 +57,11 @@ func (s *userService) FindOne(email, password string) map[string]interface{}{
 		var resp = map[string]interface{}{"status": false, "message": "Invalid login credentials. Please try again"}
 		return resp
 	} else {
-		fmt.Printf("Found user: %+v\n", user)
+		log.Printf("Found user: %+v\n", &user)
 	}
-
+	log.Println(user.Password, password)
 	passwordErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	log.Println(passwordErr)
     if passwordErr != nil {
         // Passwords don't match
         fmt.Println("Invalid password")
