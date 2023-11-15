@@ -53,9 +53,9 @@ func (c *UserController) registerUser(w http.ResponseWriter, r *http.Request) {
 
 	_, err := c.UserService.CreateUser(*user)
 
-
 	if err != nil {
 		fmt.Printf("Error creating new user: %s", err)
+		http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
 		return
 	}
 
