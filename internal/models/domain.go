@@ -16,10 +16,16 @@ type User struct {
 	Password  string `json:"password,omitempty"`
  }
 
+ type UserRepository interface {
+	FindAll() ([]User, error)
+	FindOneByEmail(email string) (*User, error)
+	Create(user User) (*mongo.InsertOneResult, error)
+ }
+
  type UserService interface {
 	FindAll() ([]byte, error)
-	CreateUser(user User) (*mongo.InsertOneResult, error)
 	FindOne(email, password string) map[string]interface{}
+	CreateUser(user User) (*mongo.InsertOneResult, error)
 }
 
 type Token struct {

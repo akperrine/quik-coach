@@ -19,13 +19,17 @@ func UserCollection(c *mongo.Database) {
 	collection = c.Collection("users")
 }
 
-type service struct{}
-
-func NewUserService() models.UserService {
-	return &service{}
+type userService struct{
+	userRepoistory models.UserRepository
 }
 
-func (*service) FindAll() ([]byte, error) {
+func NewUserService(userRepository models.UserRepository) models.UserService {
+	return &userService{
+		userRepoistory: userRepository,
+	}
+}
+
+func (*userService) FindAll() ([]byte, error) {
 	users := []models.User{}
 
 	cursor, err := collection.Find(context.TODO(), bson.M{})
@@ -60,7 +64,7 @@ func (*service) FindAll() ([]byte, error) {
 
 }
 
-func (*service) FindOne(email, password string) map[string]interface{}{
+func (*userService) FindOne(email, password string) map[string]interface{}{
 	fmt.Println(password)
 	user := &models.User{}
 
@@ -103,7 +107,7 @@ func (*service) FindOne(email, password string) map[string]interface{}{
 	return resp
 }
 
-func (*service) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
+func (*userService) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
 	encrptedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		fmt.Println(err)

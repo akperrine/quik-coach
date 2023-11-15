@@ -10,7 +10,7 @@ import (
 
 
 func main() {
-	config.Connect()
+	db.Connect()
 	controllers.HandleRequests()
 
 	log.Fatal("Something went wrong...")

@@ -5,15 +5,24 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/akperrine/quik-coach/internal/db"
 	"github.com/akperrine/quik-coach/internal/models"
 	"github.com/akperrine/quik-coach/internal/services"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserController struct {
 	UserService models.UserService 
 }
 
-var userService = services.NewUserService()
+var collection *mongo.Collection
+
+func UserCollection(c *mongo.Database) {
+	collection = c.Collection("users")
+}
+
+var userRepoistory = db.NewUserRepository(collection)
+var userService = services.NewUserService(userRepoistory)
 
 func (c *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := userService.FindAll()
