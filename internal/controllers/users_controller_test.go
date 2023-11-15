@@ -1,125 +1,127 @@
 package controllers
 
-// import (
-// 	"bytes"
-// 	"encoding/json"
-// 	"fmt"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	"github.com/akperrine/quik-coach/internal/models"
-// )
+	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
-// // MockUserService is a mock implementation of the services.UserService interface for testing purposes.
-// type MockUserService struct{}
+type MockUserService struct {
+	mock.Mock
+}
 
-// func (m *MockUserService) FindAll() ([]models.User, error) {
-// 	// Implement mock behavior for FindAll
-// 	return []models.User{}, nil
-// }
+func (m *MockUserService) FindAll() ([]byte, error) {
+	args := m.Called()
+	return args.Get(0).([]byte), args.Error(1)
+}
 
-// func (m *MockUserService) CreateUser(user models.User) (string, error) {
-// 	// Implement mock behavior for CreateUser
-// 	return "user_id", nil
-// }
+func (m *MockUserService) FindOne(email, password string) map[string]interface{} {
+	args := m.Called(email, password)
+	
+	return args.Get(0).(map[string]interface{})
+}
 
-// func (m *MockUserService) FindOne(email, password string) map[string]interface{} {
-// 	// Implement mock behavior for FindOne
-// 	return map[string]interface{}{"status": true, "message": "User found"}
-// }
+func (m *MockUserService) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
+	args := m.Called(user)
 
-// func TestGetAllUsers(t *testing.T) {
-// 	// Create a new instance of the controller with the mock service
-// 	controller := &UserController{UserService: &MockUserService{}}
+	if args.Get(0) != nil {
+		return args.Get(0).(*mongo.InsertOneResult), args.Error(1)
+	}
 
-// 	// Create a request to simulate a GET request
-// 	req, err := http.NewRequest("GET", "/users", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	return nil, args.Error(1)
+}
 
-// 	// Create a ResponseRecorder to record the response
-// 	rr := httptest.NewRecorder()
-// 	fmt.Println(rr)
+func TestUserController_GetAllUsers(t *testing.T) {
+	mockUserService := new(MockUserService)
+	mockUserService.On("FindAll").Return([]byte(`[{"id": "1", "name": "John"}]`), nil)
 
-// 	// Call the handler function
-// 	http.HandlerFunc(controller.GetAllUsers).ServeHTTP(rr, req)
+	userController := &UserController{
+		UserService: mockUserService,
+	}
 
-// 	// Check the response status code
-// 	if status := rr.Code; status != http.StatusOK {
-// 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-// 	}
+	req, err := http.NewRequest("GET", "/users", nil)
+	assert.NoError(t, err)
 
-// 	// TODO: Add more assertions for the response body or other details
-// }
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(userController.GetAllUsers)
+	handler.ServeHTTP(recorder, req)
 
-// func TestRegisterUser(t *testing.T) {
-// 	// Create a new instance of the controller with the mock service
-// 	controller := &UserController{UserService: &MockUserService{}}
+	assert.Equal(t, http.StatusOK, recorder.Code)
 
-// 	// Create a user for the test
-// 	user := models.User{
-// 		// TODO: Set user details for testing
-// 	}
+	var users []map[string]interface{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &users)
+	assert.NoError(t, err)
+	assert.Len(t, users, 1)
+	assert.Equal(t, "John", users[0]["name"])
+}
 
-// 	// Convert user to JSON
-// 	userJSON, err := json.Marshal(user)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+func TestUserController_RegisterUser(t *testing.T) {
+	mockUserService := new(MockUserService)
+	mockUserService.On("CreateUser", mock.Anything).Return(nil, nil)
 
-// 	// Create a request to simulate a POST request with user data
-// 	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(userJSON))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	userController := &UserController{
+		UserService: mockUserService,
+	}
 
-// 	// Create a ResponseRecorder to record the response
-// 	rr := httptest.NewRecorder()
+	user := &models.User{
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "john@example.com",
+		Password:  "password123",
+	}
 
-// 	// Call the handler function
-// 	http.HandlerFunc(controller.registerUser).ServeHTTP(rr, req)
+	userJSON, err := json.Marshal(user)
+	assert.NoError(t, err)
 
-// 	// Check the response status code
-// 	if status := rr.Code; status != http.StatusOK {
-// 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-// 	}
+	req, err := http.NewRequest("POST", "/users/register", bytes.NewReader(userJSON))
+	assert.NoError(t, err)
 
-// 	// TODO: Add more assertions for the response body or other details
-// }
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(userController.registerUser)
+	handler.ServeHTTP(recorder, req)
 
-// func TestLoginUser(t *testing.T) {
-// 	// Create a new instance of the controller with the mock service
-// 	controller := &UserController{UserService: &MockUserService{}}
+	assert.Equal(t, http.StatusOK, recorder.Code)
 
-// 	// Create a user for the test
-// 	user := models.User{
-// 		// TODO: Set user details for testing
-// 	}
+	var response string
+	err = json.Unmarshal(recorder.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user successfully created", response)
+}
 
-// 	// Convert user to JSON
-// 	userJSON, err := json.Marshal(user)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+func TestUserController_LoginUser(t *testing.T) {
+	mockUserService := new(MockUserService)
+	mockUserService.On("FindOne", "john@example.com", "password123").Return(map[string]interface{}{"status": true}, nil)
 
-// 	// Create a request to simulate a POST request with user data
-// 	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(userJSON))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	userController := &UserController{
+		UserService: mockUserService,
+	}
 
-// 	// Create a ResponseRecorder to record the response
-// 	rr := httptest.NewRecorder()
+	user := &models.User{
+		Email:    "john@example.com",
+		Password: "password123",
+	}
 
-// 	// Call the handler function
-// 	http.HandlerFunc(controller.loginUser).ServeHTTP(rr, req)
+	userJSON, err := json.Marshal(user)
+	assert.NoError(t, err)
 
-// 	// Check the response status code
-// 	if status := rr.Code; status != http.StatusOK {
-// 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-// 	}
+	req, err := http.NewRequest("POST", "/users/login", bytes.NewReader(userJSON))
+	assert.NoError(t, err)
 
-// 	// TODO: Add more assertions for the response body or other details
-// }
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(userController.loginUser)
+	handler.ServeHTTP(recorder, req)
+
+	assert.Equal(t, http.StatusOK, recorder.Code)
+
+	var response map[string]interface{}
+	err = json.Unmarshal(recorder.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, true, response["status"])
+}
