@@ -14,28 +14,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// func NewUserRepository(collection *mongo.Collection) models.UserRepository {
+// 	return &userRepository{
+// 		collection: collection,
+// 	}
+// }
 type GoalsController struct {
-	collection *mongo.Collection
+	goalsCollection *mongo.Collection
 }
 
 var goalsCollection *mongo.Collection
 
-func GoalsCollection(db *mongo.Database) *mongo.Collection {
-	goalsCollection = db.Collection("goals")
-	log.Printf("Connected to database: %s, collection: %s\n", db.Name(), collection.Name())
-
-	return goalsCollection
-}
 
 func NewGoalsController(db *mongo.Database) *GoalsController {
-	collection := GoalsCollection(db)
-
+	goalsCollection = db.Collection("goals")
 	return &GoalsController{
-		collection: collection,
+		goalsCollection: goalsCollection,
 	}
 }
 
 func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Connected to database: %s, collection: %s\n", c.goalsCollection.Name())
 	parts := strings.Split(r.URL.Path, "/")
 
 	if len(parts) < 3 {
@@ -53,7 +52,7 @@ func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request
 	log.Println(parts, userEmail, filter, "\n", findOptions)
 
 
-	cursor, err := goalsCollection.Find(ctx, filter)
+	cursor, err := c.goalsCollection.Find(ctx, filter)
 	if err != nil {
 		// Handle the error, e.g., log it and return an error response
 		http.Error(w, "Error fetching user goals", http.StatusInternalServerError)
@@ -91,6 +90,7 @@ func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request
 }
 
 func (c *GoalsController) GetAllGoals(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Connected to collection: %s\n", c.goalsCollection.Name())
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
@@ -100,7 +100,7 @@ func (c *GoalsController) GetAllGoals(w http.ResponseWriter, r *http.Request) {
 	findOptions := options.Find()
 	log.Println("Fetching all goals...", filter, "\n", findOptions)
 
-	cursor, err := goalsCollection.Find(ctx, filter)
+	cursor, err := c.goalsCollection.Find(ctx, filter)
 	if err != nil {
 		// Handle the error, e.g., log it and return an error response
 		http.Error(w, "Error fetching all goals", http.StatusInternalServerError)
@@ -110,13 +110,18 @@ func (c *GoalsController) GetAllGoals(w http.ResponseWriter, r *http.Request) {
 
 	var goals []models.Goal
 	for cursor.Next(ctx) {
+		log.Println(cursor)
 		var goal models.Goal
 		if err := cursor.Decode(&goal); err != nil {
 			// Handle the decoding error, e.g., log it and skip the current document
+			log.Println("cant parse")
 			continue
 		}
+		log.Println(goal.UserEmail, goal.CurrentDistance)
 		goals = append(goals, goal)
 	}
+
+	log.Println("ggs",goals)
 
 	if err := cursor.Err(); err != nil {
 		// Handle the cursor error, e.g., log it and return an error response

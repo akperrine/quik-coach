@@ -31,5 +31,5 @@ func Connect() *mongo.Database{
 	db := client.Database("o2_shark")  
 	
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
-	return db  
+	return db
 }
