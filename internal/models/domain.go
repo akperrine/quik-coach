@@ -5,9 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-
-
-
 type User struct {
 	ID        string `json:"id" bson:"_id,omitempty"`
 	FirstName string `json:"first_name"`
@@ -35,3 +32,43 @@ type Token struct {
 	*jwt.RegisteredClaims
 }
 
+type Goal struct {
+	ID 			 string `json:"id" bson:"_id,omitempty"`
+	UserEmail	 string `json:"user_email"`
+	Name		 string `json:"name"`
+	TargetDistance	int `json:"target_distance"`
+	CurrentDistance	int `json:"current_distance"`
+	StartDate		int `json:"start_date"`
+	TargetDate		int	`json:"target_date"`
+	Device	   Modality `json:"device,omitempty"`
+	Workouts  []Workout `json:"workouts,omitempty"`
+}
+
+type GoalRepository interface {
+	FindAll() ([]Goal, error)
+	FindOne(id string) (*Goal, error)
+	Create(goal Goal) (*mongo.InsertOneResult, error)
+	Update(id string) (*mongo.UpdateResult, error)
+	Delete(id string) (*mongo.DeleteResult, error)
+ }
+
+type Workout struct {
+	ID       	string 		`json:"id" bson:"_id,omitempty"`
+	GoalID   	string 		`json:"goal_id" bson:"goal_id,omitempty"`
+	UserEmail 	string 		`json:"user_email"`
+	Distance 	int    		`json:"distance"`
+	Date     	int    		`json:"date"`
+	Modality	Modality 	`json:"modality"`
+}
+
+type Modality string
+
+const (
+	Run     Modality = "Run"
+	Walk    Modality = "Walk"
+	Bike    Modality = "Bike"
+	Row     Modality = "Row"
+	Climb   Modality = "Climb"
+	Swim    Modality = "Swim"
+	Other   Modality = "Other"
+)
