@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/akperrine/quik-coach/internal"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func CreateToken(user models.User) (string, error) {
+func CreateToken(user domain.User) (string, error) {
 	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Minute * 100000))
 
 
 
-	claims := &models.Token{
+	claims := &domain.Token{
 		UserID: user.ID,
 		Name:	user.FirstName,
 		Email:	user.Email,

@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/akperrine/quik-coach/internal"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
 
 type userService struct{
-	userRepoistory models.UserRepository
+	userRepoistory domain.UserRepository
 }
 
-func NewUserService(userRepository models.UserRepository) models.UserService {
+func NewUserService(userRepository domain.UserRepository) domain.UserService {
 	return &userService{
 		userRepoistory: userRepository,
 	}
@@ -40,7 +40,7 @@ func (s *userService) FindAll() ([]byte, error) {
 
 func (s *userService) FindOne(email, password string) map[string]interface{}{
 	fmt.Println(password)
-	user := &models.User{}
+	user := &domain.User{}
 
 	user, err := s.userRepoistory.FindOneByEmail(email)
 	log.Println("use err ", user, err, email)
@@ -82,7 +82,7 @@ func (s *userService) FindOne(email, password string) map[string]interface{}{
 	return resp
 }
 
-func (s *userService) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
+func (s *userService) CreateUser(user domain.User) (*mongo.InsertOneResult, error) {
 	email := user.Email
 	existingUser, _ := s.userRepoistory.FindOneByEmail(email)
 

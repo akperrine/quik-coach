@@ -6,13 +6,13 @@ import (
 	"net/http"
 
 	"github.com/akperrine/quik-coach/internal/db"
-	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/akperrine/quik-coach/internal"
 	"github.com/akperrine/quik-coach/internal/services"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserController struct {
-	UserService models.UserService 
+	UserService domain.UserService 
 }
 
 func NewUserController(collection *mongo.Collection) *UserController {
@@ -40,7 +40,7 @@ func (c *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UserController) registerUser(w http.ResponseWriter, r *http.Request) {
-	user := &models.User{}
+	user := &domain.User{}
 	json.NewDecoder(r.Body).Decode(user)
 
 	_, err := c.UserService.CreateUser(*user)
@@ -55,7 +55,7 @@ func (c *UserController) registerUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UserController) loginUser(w http.ResponseWriter, r *http.Request) {
-	user := &models.User{}
+	user := &domain.User{}
 	err := json.NewDecoder(r.Body).Decode(user) 
 
 	if err != nil {

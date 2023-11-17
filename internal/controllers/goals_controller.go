@@ -3,12 +3,14 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/akperrine/quik-coach/internal/models"
+	domain "github.com/akperrine/quik-coach/internal"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -60,9 +62,9 @@ func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request
 	}
 	defer cursor.Close(ctx)
 
-	var goals []models.GoalDto
+	var goals []domain.GoalDto
 	for cursor.Next(ctx) {
-		var goal models.GoalDto
+		var goal domain.GoalDto
 		if err := cursor.Decode(&goal); err != nil {
 			log.Println("Error decoding goal:", err)
 			continue
@@ -112,10 +114,10 @@ func (c *GoalsController) GetAllGoals(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cursor.Close(ctx)
 
-	var goals []models.Goal
+	var goals []domain.Goal
 	for cursor.Next(ctx) {
 		log.Println(cursor)
-		var goal models.Goal
+		var goal domain.Goal
 		if err := cursor.Decode(&goal); err != nil {
 			// Handle the decoding error, e.g., log it and skip the current document
 			log.Println("cant parse")
@@ -146,6 +148,27 @@ func (c *GoalsController) GetAllGoals(w http.ResponseWriter, r *http.Request) {
 
 func (c *GoalsController) AddGoal(w http.ResponseWriter, r *http.Request) {
 	log.Println("adding...")
+	goal := &domain.Goal{}
+	json.NewDecoder(r.Body).Decode(goal)
+
+	if _, ok := domain.ModalitySet[goal.Modality]; !ok {
+		http.Error(w, "Invalid modality chosen", http.StatusBadRequest)
+		return
+	}
+
+	goal.ID = uuid.NewString()
+	
+	createdGoal, err := c.goalsCollection.InsertOne(context.TODO(), goal)
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// return createdGoal, nil
+
+	json.NewEncoder(w).Encode(createdGoal)
 }
 
 func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {

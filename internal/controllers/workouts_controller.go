@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/akperrine/quik-coach/internal"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	// "go.mongodb.org/mongo-driver/mongo/options"
@@ -33,7 +33,7 @@ func (c *WorkoutsController) GetAllWorkouts(w http.ResponseWriter, r *http.Reque
 	filter := bson.M{}
 
 	// findOptions := options.Find()
-	log.Println("Fetching all workouts...", filter, "\n")
+	// log.Println("Fetching all workouts...", filter, "\n")
 
 	cursor, err := c.workoutCollection.Find(ctx, filter)
 	if err != nil {
@@ -46,10 +46,10 @@ func (c *WorkoutsController) GetAllWorkouts(w http.ResponseWriter, r *http.Reque
 	log.Println("Number of documents:", cursor.RemainingBatchLength())
 
 
-	var workouts []models.Workout
+	var workouts []domain.Workout
 	for cursor.Next(ctx) {
 		log.Println(cursor)
-		var workout models.Workout
+		var workout domain.Workout
 		if err := cursor.Decode(&workout); err != nil {
 			// Handle the decoding error, e.g., log it and skip the current document
 			log.Println("cant parse")

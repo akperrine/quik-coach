@@ -3,7 +3,7 @@ package services
 import (
 	"testing"
 
-	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/akperrine/quik-coach/internal"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -12,28 +12,28 @@ type MockUserRepository struct {
 	// You can add fields or methods specific to your test needs.
 }
 
-func (m *MockUserRepository) FindAll() ([]models.User, error) {
+func (m *MockUserRepository) FindAll() ([]domain.User, error) {
 	// Mock implementation for FindAll function.
 	// Return sample data for testing.
-	users := []models.User{
+	users := []domain.User{
 		{ID: "1", FirstName: "John", LastName: "Doe", Email: "john@example.com"},
 		{ID: "2", FirstName: "Jane", LastName: "Doe", Email: "jane@example.com"},
 	}
 	return users, nil
 }
 
-func (m *MockUserRepository) FindOneByEmail(email string) (*models.User, error) {
+func (m *MockUserRepository) FindOneByEmail(email string) (*domain.User, error) {
 	// Return a sample user for testing.
 	// Password is hashed password123 with 10 cost factor
 	if email == "john@example.com" {
-		user := &models.User{ID: "1", FirstName: "John", LastName: "Doe", Email: "john@example.com", Password: "$2y$10$go8ZNp2w5TmjyiuoGRwJOOINZ9Qi1KWGZbAygqZc3/w84IxJSFcn6"}
+		user := &domain.User{ID: "1", FirstName: "John", LastName: "Doe", Email: "john@example.com", Password: "$2y$10$go8ZNp2w5TmjyiuoGRwJOOINZ9Qi1KWGZbAygqZc3/w84IxJSFcn6"}
 		return user, nil
 	} else {
 		return nil, mongo.ErrNilDocument
 	}
 }
 
-func (m *MockUserRepository) Create(user models.User) (*mongo.InsertOneResult, error) {
+func (m *MockUserRepository) Create(user domain.User) (*mongo.InsertOneResult, error) {
 	// Return a sample InsertOneResult for testing.
 	result := &mongo.InsertOneResult{InsertedID: user.ID}
 	return result, nil
@@ -68,7 +68,7 @@ func TestUserService_FindOne_EmailExists(t *testing.T) {
 	_, userExists := result["user"]
 
 	assert.True(t, userExists, "Expected 'user' key to be present")
-	assert.Equal(t, "John", result["user"].(*models.User).FirstName)
+	assert.Equal(t, "John", result["user"].(*domain.User).FirstName)
 }
 
 func TestUserService_FindOne_EmailNotExist(t *testing.T) {
@@ -105,7 +105,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	userService := NewUserService(&MockUserRepository{})
 
 	// Create a sample user for testing.
-	user := models.User{
+	user := domain.User{
 		ID:        "3",
 		FirstName: "Alice",
 		LastName:  "Doe",
