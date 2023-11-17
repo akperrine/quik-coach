@@ -35,14 +35,12 @@ func (r *userRepository) FindAll() ([]models.User, error) {
 	for cursor.Next(context.Background()) {
 		var user models.User
 		if err := cursor.Decode(&user); err != nil {
-			log.Printf("Failed to decode user with error: %s", err)
 			return nil, err
 		}
 		users = append(users, user)
 	}
 
 	if err := cursor.Err(); err != nil {
-		log.Printf("Error during cursor iteration with error: %s", err)
 		return nil, err
 	}
 

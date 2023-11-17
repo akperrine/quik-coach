@@ -10,8 +10,15 @@ import (
 
 func HandleRequests() {
 	db := db.Connect()
-	userController := NewUserController(db)
-	goalsController := NewGoalsController(db)
+
+	var userCollection = db.Collection("users")
+	var goalsCollection = db.Collection("goals")
+	var workoutsCollection = db.Collection("workouts")
+
+
+	userController := NewUserController(userCollection)
+	goalsController := NewGoalsController(goalsCollection, workoutsCollection)
+	workoutsController := NewWorkoutsController(workoutsCollection)
 
 	http.HandleFunc("/users", userController.GetAllUsers)
 	http.HandleFunc("/users/register", userController.registerUser)
@@ -22,8 +29,13 @@ func HandleRequests() {
 	http.HandleFunc("/goals/create", goalsController.AddGoal)
 	http.HandleFunc("/goals/update", goalsController.UpdateGoal)
 	http.HandleFunc("/goals/delete", goalsController.DeleteGoal)
-	http.HandleFunc("/check", goalsController.GetAllGoals)
-	http.HandleFunc("/check2", goalsController.GetAllWods)
+	http.HandleFunc("/goals", goalsController.GetAllGoals)
+
+	http.HandleFunc("/workouts/user/", workoutsController.GetUserWorkouts)
+	http.HandleFunc("/workouts/create", workoutsController.Addworkout)
+	http.HandleFunc("/workouts/update", workoutsController.Updateworkout)
+	http.HandleFunc("/workouts/delete", workoutsController.Deleteworkout)
+	http.HandleFunc("/workouts", workoutsController.GetAllWorkouts)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 

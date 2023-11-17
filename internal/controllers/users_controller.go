@@ -15,15 +15,7 @@ type UserController struct {
 	UserService models.UserService 
 }
 
-var collection *mongo.Collection
-
-func UserCollection(c *mongo.Database) *mongo.Collection {
-	collection = c.Collection("users")
-	return collection
-}
-
-func NewUserController(database *mongo.Database) *UserController {
-	collection := UserCollection(database)
+func NewUserController(collection *mongo.Collection) *UserController {
 
 	// Initialize repository with the MongoDB collection
 	userRepository := db.NewUserRepository(collection)
