@@ -36,11 +36,11 @@ func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request
 	log.Printf("Connected to collection: %s", c.goalsCollection.Name())
 	parts := strings.Split(r.URL.Path, "/")
 
-	if len(parts) < 3 {
+	if len(parts) < 4 {
 		http.Error(w, "Incorrect path", http.StatusBadRequest)
 		return
 	}
-	userEmail := parts[2]
+	userEmail := parts[3]
 	
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
@@ -57,6 +57,7 @@ func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request
 	}
 	
 	pipeline := mongo.Pipeline{matchStage, lookupStage}
+
 
 	cursor, err := c.goalsCollection.Aggregate(ctx, pipeline)
 	if err != nil {
@@ -198,4 +199,17 @@ func (c *GoalsController) GetAllWods(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSONResponse(w, http.StatusOK, responseJSON)
+}
+
+func (c *GoalsController) AddGoal(w http.ResponseWriter, r *http.Request) {
+	log.Println("adding...")
+}
+
+func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {
+	log.Println("updating...")
+
+}
+
+func (c *GoalsController) DeleteGoal(w http.ResponseWriter, r *http.Request) {
+	log.Println("deleting...")
 }

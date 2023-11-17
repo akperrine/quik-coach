@@ -18,7 +18,10 @@ func HandleRequests() {
 	http.HandleFunc("/users/login", userController.loginUser)
 	http.HandleFunc("/health_check", healthCheck)
 
-	http.HandleFunc("/goals/", goalsController.GetAllUserGoals)
+	http.HandleFunc("/goals/user/", goalsController.GetAllUserGoals)
+	http.HandleFunc("/goals/create", goalsController.AddGoal)
+	http.HandleFunc("/goals/update", goalsController.UpdateGoal)
+	http.HandleFunc("/goals/delete", goalsController.DeleteGoal)
 	http.HandleFunc("/check", goalsController.GetAllGoals)
 	http.HandleFunc("/check2", goalsController.GetAllWods)
 	log.Fatal(http.ListenAndServe(":8000", nil))
