@@ -36,7 +36,19 @@ type Goal struct {
 	ID 			 string `json:"id" bson:"_id,omitempty"`
 	UserEmail	 string `json:"user_email" bson:"user_email"`
 	Name		 string `json:"name"`
-	TargetDistance	int `json:"target_distance"`
+	TargetDistance	float64 `json:"target_distance"`
+	StartDate		int `json:"start_date"`
+	TargetDate		int	`json:"target_date"`
+	Device	   	 string `json:"device,omitempty"`
+	Workouts  []Workout `json:"workouts,omitempty"`
+}
+
+type GoalDto struct {
+	ID 			 string `json:"id" bson:"_id,omitempty"`
+	UserEmail	 string `json:"user_email" bson:"user_email"`
+	Name		 string `json:"name"`
+	TargetDistance	float64 `json:"target_distance"`
+	CurrentDistance float64 `json:"current_distance"`
 	StartDate		int `json:"start_date"`
 	TargetDate		int	`json:"target_date"`
 	Device	   	 string `json:"device,omitempty"`
@@ -55,7 +67,7 @@ type Workout struct {
 	ID       	string 		`json:"id" bson:"_id,omitempty"`
 	GoalID   	string 		`json:"goal_id" bson:"goal_id,omitempty"`
 	UserEmail 	string 		`json:"user_email" bson:"user_email"`
-	Distance 	int    		`json:"distance"`
+	Distance 	float64    	`json:"distance"`
 	Date     	int    		`json:"date"`
 	Modality	string 		`json:"modality"`
 }

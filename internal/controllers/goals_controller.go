@@ -45,42 +45,52 @@ func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 	
-	filter := bson.M{"user_email": userEmail} 
+	matchStage := bson.D{{Key: "$match", Value: bson.D{{Key: "user_email",Value: userEmail}}}}
+
+	lookupStage := bson.D{
+		{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "workouts"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "goal_id"},
+			{Key: "as", Value: "workouts"},
+		}},
+	}
 	
-	findOptions := options.Find()
-	log.Println(parts, userEmail, filter, "\n", findOptions)
+	pipeline := mongo.Pipeline{matchStage, lookupStage}
 
-
-	cursor, err := c.goalsCollection.Find(ctx, filter)
+	cursor, err := c.goalsCollection.Aggregate(ctx, pipeline)
 	if err != nil {
-		// Handle the error, e.g., log it and return an error response
-		http.Error(w, "Error fetching user goals", http.StatusInternalServerError)
+		http.Error(w, "Error fetching goals with workouts", http.StatusInternalServerError)
 		return
 	}
 	defer cursor.Close(ctx)
 
-	log.Println(ctx)
-	var goals []models.Goal
+	var goals []models.GoalDto
 	for cursor.Next(ctx) {
-		var goal models.Goal
+		var goal models.GoalDto
 		if err := cursor.Decode(&goal); err != nil {
-			// Handle the decoding error, e.g., log it and skip the current document
+			log.Println("Error decoding goal:", err)
 			continue
 		}
+		log.Println(goal)
+		var totDistance float64
+		for _, workout := range goal.Workouts {
+			log.Println("wod ",workout.Distance)
+			totDistance += float64(workout.Distance)
+		}
+		goal.CurrentDistance = totDistance
 		goals = append(goals, goal)
 	}
 
 	if err := cursor.Err(); err != nil {
-		// Handle the cursor error, e.g., log it and return an error response
-		http.Error(w, "Error fetching user goals", http.StatusInternalServerError)
+		http.Error(w, "Error fetching goals with workouts", http.StatusInternalServerError)
 		return
 	}
 
 	// Marshal the goals to JSON and send the response
 	responseJSON, err := json.Marshal(goals)
 	if err != nil {
-		// Handle the JSON marshaling error, e.g., log it and return an error response
-		http.Error(w, "Error encoding user goals", http.StatusInternalServerError)
+		http.Error(w, "Error encoding goals with workouts", http.StatusInternalServerError)
 		return
 	}
 
