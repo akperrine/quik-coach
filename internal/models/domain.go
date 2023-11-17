@@ -37,11 +37,10 @@ type Goal struct {
 	UserEmail	 string `json:"user_email" bson:"user_email"`
 	Name		 string `json:"name"`
 	TargetDistance	int `json:"target_distance"`
-	CurrentDistance	int `json:"current_distance"`
 	StartDate		int `json:"start_date"`
 	TargetDate		int	`json:"target_date"`
 	Device	   	 string `json:"device,omitempty"`
-	// Workouts  []Workout `json:"workouts,omitempty"`
+	Workouts  []Workout `json:"workouts,omitempty"`
 }
 
 type GoalRepository interface {
@@ -58,7 +57,7 @@ type Workout struct {
 	UserEmail 	string 		`json:"user_email" bson:"user_email"`
 	Distance 	int    		`json:"distance"`
 	Date     	int    		`json:"date"`
-	Modality	Modality 	`json:"modality"`
+	Modality	string 		`json:"modality"`
 }
 
 type Modality string

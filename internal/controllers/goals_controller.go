@@ -14,27 +14,26 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// func NewUserRepository(collection *mongo.Collection) models.UserRepository {
-// 	return &userRepository{
-// 		collection: collection,
-// 	}
-// }
 type GoalsController struct {
 	goalsCollection *mongo.Collection
+	workoutCollection *mongo.Collection
 }
 
 var goalsCollection *mongo.Collection
+var workoutCollection *mongo.Collection
 
 
 func NewGoalsController(db *mongo.Database) *GoalsController {
 	goalsCollection = db.Collection("goals")
+	workoutCollection = db.Collection("workouts")
 	return &GoalsController{
 		goalsCollection: goalsCollection,
+		workoutCollection: workoutCollection,
 	}
 }
 
 func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Connected to database: %s, collection: %s\n", c.goalsCollection.Name())
+	log.Printf("Connected to collection: %s", c.goalsCollection.Name())
 	parts := strings.Split(r.URL.Path, "/")
 
 	if len(parts) < 3 {
@@ -117,7 +116,7 @@ func (c *GoalsController) GetAllGoals(w http.ResponseWriter, r *http.Request) {
 			log.Println("cant parse")
 			continue
 		}
-		log.Println(goal.UserEmail, goal.CurrentDistance)
+		log.Println(goal.UserEmail)
 		goals = append(goals, goal)
 	}
 
@@ -131,6 +130,57 @@ func (c *GoalsController) GetAllGoals(w http.ResponseWriter, r *http.Request) {
 
 	// Marshal the goals to JSON and send the response
 	responseJSON, err := json.Marshal(goals)
+	if err != nil {
+		// Handle the JSON marshaling error, e.g., log it and return an error response
+		http.Error(w, "Error encoding all goals", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSONResponse(w, http.StatusOK, responseJSON)
+}
+
+func (c *GoalsController) GetAllWods(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Connected to collection: %s\n", c.workoutCollection.Name())
+	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancel()
+
+	// Empty filter to retrieve all goals
+	filter := bson.M{}
+
+	findOptions := options.Find()
+	log.Println("Fetching all goals...", filter, "\n", findOptions)
+
+	cursor, err := c.workoutCollection.Find(ctx, filter)
+	if err != nil {
+		// Handle the error, e.g., log it and return an error response
+		http.Error(w, "Error fetching all goals", http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var workouts []models.Workout
+	for cursor.Next(ctx) {
+		log.Println(cursor)
+		var workout models.Workout
+		if err := cursor.Decode(&workout); err != nil {
+			// Handle the decoding error, e.g., log it and skip the current document
+			log.Println("cant parse")
+			continue
+		}
+		log.Println(workout.UserEmail)
+		workouts = append(workouts, workout)
+	}
+
+	log.Println("ggs",workouts)
+
+	if err := cursor.Err(); err != nil {
+		// Handle the cursor error, e.g., log it and return an error response
+		http.Error(w, "Error fetching all goals", http.StatusInternalServerError)
+		return
+	}
+
+	// Marshal the goals to JSON and send the response
+	responseJSON, err := json.Marshal(workouts)
 	if err != nil {
 		// Handle the JSON marshaling error, e.g., log it and return an error response
 		http.Error(w, "Error encoding all goals", http.StatusInternalServerError)

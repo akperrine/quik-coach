@@ -20,6 +20,7 @@ func HandleRequests() {
 
 	http.HandleFunc("/goals/", goalsController.GetAllUserGoals)
 	http.HandleFunc("/check", goalsController.GetAllGoals)
+	http.HandleFunc("/check2", goalsController.GetAllWods)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 
