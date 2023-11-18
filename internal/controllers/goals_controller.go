@@ -148,7 +148,6 @@ func (c *GoalsController) GetAllGoals(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *GoalsController) AddGoal(w http.ResponseWriter, r *http.Request) {
-	log.Println("adding...")
 	goal := &domain.Goal{}
 	json.NewDecoder(r.Body).Decode(goal)
 
@@ -173,8 +172,6 @@ func (c *GoalsController) AddGoal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {
-	log.Println("updating...")
-
 	goal := &domain.Goal{}
 	json.NewDecoder(r.Body).Decode(goal)
 	log.Println(goal)
@@ -206,6 +203,15 @@ func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *GoalsController) DeleteGoal(w http.ResponseWriter, r *http.Request) {
-	log.Println("deleting...")
+	goal := &domain.Goal{}
+	json.NewDecoder(r.Body).Decode(goal)
 
+	result, err := c.goalsCollection.DeleteOne(context.TODO(), bson.M{"_id": goal.ID})
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, fmt.Sprintf("Error deleting user: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(result)
 }
