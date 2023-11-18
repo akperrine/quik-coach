@@ -49,16 +49,13 @@ func (r *goalRepository) FindGoalsByEmail(email string) ([]domain.GoalDto, error
 
 	var goals []domain.GoalDto
 	for cursor.Next(ctx) {
-		log.Println(cursor)
 		var goal domain.GoalDto
 		if err := cursor.Decode(&goal); err != nil {
 			log.Println("Error decoding goal:", err)
 			continue
 		}
-		log.Println(goal)
 		var totDistance float64
 		for _, workout := range goal.Workouts {
-			log.Println("wod ",workout.Distance)
 			totDistance += float64(workout.Distance)
 		}
 		goal.CurrentDistance = totDistance

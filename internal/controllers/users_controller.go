@@ -31,6 +31,11 @@ func NewUserController(collection *mongo.Collection) *UserController {
 
 
 func (c *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	users, err := c.UserService.FindAll()
 	if err != nil {
 		writeJSONResponse(w, http.StatusBadRequest, users)
@@ -40,6 +45,11 @@ func (c *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UserController) registerUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	user := &domain.User{}
 	json.NewDecoder(r.Body).Decode(user)
 
@@ -55,6 +65,11 @@ func (c *UserController) registerUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UserController) loginUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	user := &domain.User{}
 	err := json.NewDecoder(r.Body).Decode(user) 
 
