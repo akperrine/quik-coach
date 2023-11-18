@@ -57,10 +57,10 @@ type GoalDto struct {
 	ID 			 string `json:"id" bson:"_id,omitempty"`
 	UserEmail	 string `json:"user_email" bson:"user_email"`
 	Name		 string `json:"name"`
-	TargetDistance	float64 `json:"target_distance"`
+	TargetDistance	float64 `json:"target_distance" bson:"target_distance"`
 	CurrentDistance float64 `json:"current_distance"`
-	StartDate		int `json:"start_date"`
-	TargetDate		int	`json:"target_date"`
+	StartDate		int `json:"start_date" bson:"start_date"`
+	TargetDate		int	`json:"target_date" bson:"target_date"`
 	Modality	   	 string `json:"modality,omitempty"`
 	Workouts  []Workout `json:"workouts,omitempty"`
 }
@@ -68,14 +68,14 @@ type GoalDto struct {
 type GoalService interface {
 	FindUserGoals(email string) ([]byte, error)
 	CreateGoal(goal Goal) (*mongo.InsertOneResult, error)
-	UpdateGoal(goal Goal) (*mongo.UpdateResult)
-	DeleteGoal(goal Goal) (*mongo.DeleteResult)
+	UpdateGoal(goal Goal) (*mongo.UpdateResult, error)
+	DeleteGoal(goal Goal) (*mongo.DeleteResult, error)
 }
 
 type GoalRepository interface {
 	FindGoalsByEmail(email string) ([]GoalDto, error)
 	Create(goal Goal) (*mongo.InsertOneResult, error)
-	Update(id string) (*mongo.UpdateResult, error)
+	Update(goal Goal) (*mongo.UpdateResult, error)
 	Delete(id string) (*mongo.DeleteResult, error)
  }
 

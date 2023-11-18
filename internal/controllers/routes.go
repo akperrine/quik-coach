@@ -28,7 +28,7 @@ func HandleRequests() {
 
 	http.HandleFunc("/goals/user/", goalsController.GetAllUserGoals)
 	http.HandleFunc("/goals/create", goalsController.AddGoal)
-	// http.HandleFunc("/goals/update", goalsController.UpdateGoal)
+	http.HandleFunc("/goals/update", goalsController.UpdateGoal)
 	// http.HandleFunc("/goals/delete", goalsController.DeleteGoal)
 
 	http.HandleFunc("/workouts/user/", workoutsController.GetUserWorkouts)

@@ -49,6 +49,7 @@ func (r *goalRepository) FindGoalsByEmail(email string) ([]domain.GoalDto, error
 
 	var goals []domain.GoalDto
 	for cursor.Next(ctx) {
+		log.Println(cursor)
 		var goal domain.GoalDto
 		if err := cursor.Decode(&goal); err != nil {
 			log.Println("Error decoding goal:", err)
@@ -76,8 +77,39 @@ func (r *goalRepository) Create(goal domain.Goal) (*mongo.InsertOneResult, error
 	return r.goalsCollection.InsertOne(context.TODO(), goal)
 }
 
-func (*goalRepository) Update(id string) (*mongo.UpdateResult, error) {
-	panic("unimplemented")
+func (r *goalRepository) Update(goal domain.Goal) (*mongo.UpdateResult, error) {
+	// log.Println(goal)
+	// if _, ok := domain.ModalitySet[goal.Modality]; !ok {
+	// 	http.Error(w, "Invalid modality chosen", http.StatusBadRequest)
+	// 	return
+	// }
+	// fmt.Println(reflect.TypeOf(goal.TargetDistance))
+
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
+	// 	return
+	// }
+	
+	updateData := bson.M{
+		"$set": bson.M{
+			"name":            goal.Name,
+			"target_distance": float64(goal.TargetDistance),
+			"start_date":      int(goal.StartDate),
+			"target_date":     int(goal.TargetDate),
+			"modality":        goal.Modality,
+		},
+	}
+	// log.Println(goal.ID)
+	// _, err := c.goalsCollection.UpdateByID(context.TODO(), goal.ID, updateData)
+
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	return r.goalsCollection.UpdateByID(context.TODO(), goal.ID, updateData)
 }
 
 

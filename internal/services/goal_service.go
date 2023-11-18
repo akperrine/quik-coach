@@ -52,11 +52,23 @@ func (s *goalService) CreateGoal(goal domain.Goal) (*mongo.InsertOneResult, erro
 	return result, nil
 }
 
-func (*goalService) UpdateGoal(goal domain.Goal) *mongo.UpdateResult {
-	panic("unimplemented")
+func (s *goalService) UpdateGoal(goal domain.Goal) (*mongo.UpdateResult, error) {
+	if _, ok := domain.ModalitySet[goal.Modality]; !ok {
+		// http.Error(w, "Invalid modality chosen", http.StatusBadRequest)
+		return nil, fmt.Errorf("invalid modality")
+	}
+
+	result, err := s.goalRepository.Update(goal)
+
+	if err != nil {
+		fmt.Println(err)
+		// http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
+		return nil, err
+	}
+	return result, err
 }
 
-func (*goalService) DeleteGoal(goal domain.Goal) *mongo.DeleteResult {
+func (*goalService) DeleteGoal(goal domain.Goal) (*mongo.DeleteResult, error) {
 	panic("unimplemented")
 }
 

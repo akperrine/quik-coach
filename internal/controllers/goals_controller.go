@@ -54,14 +54,36 @@ func (c *GoalsController) AddGoal(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error adding goal", http.StatusBadRequest)
 	}
 
+	json.NewEncoder(w).Encode(response)
+}
+
+func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {
+	goal := &domain.Goal{}
+	json.NewDecoder(r.Body).Decode(goal)
+
+	_, err := c.GoalService.UpdateGoal(*goal)
+
+	if err != nil {
+		http.Error(w, "Error updating user", http.StatusBadRequest)
+	}
+	// log.Println(goal)
 	// if _, ok := domain.ModalitySet[goal.Modality]; !ok {
 	// 	http.Error(w, "Invalid modality chosen", http.StatusBadRequest)
 	// 	return
 	// }
-
-	// goal.ID = uuid.NewString()
+	// fmt.Println(reflect.TypeOf(goal.TargetDistance))
 	
-	// createdGoal, err := c.goalsCollection.InsertOne(context.TODO(), goal)
+	// updateData := bson.M{
+	// 	"$set": bson.M{
+	// 		"name":            goal.Name,
+	// 		"target_distance": float64(goal.TargetDistance),
+	// 		"start_date":      int(goal.StartDate),
+	// 		"target_date":     int(goal.TargetDate),
+	// 		"modality":        goal.Modality,
+	// 	},
+	// }
+	// log.Println(goal.ID)
+	// _, err := c.goalsCollection.UpdateByID(context.TODO(), goal.ID, updateData)
 
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -69,39 +91,8 @@ func (c *GoalsController) AddGoal(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode("User updated succesfuly")
 }
-
-// func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {
-// 	goal := &domain.Goal{}
-// 	json.NewDecoder(r.Body).Decode(goal)
-// 	log.Println(goal)
-// 	if _, ok := domain.ModalitySet[goal.Modality]; !ok {
-// 		http.Error(w, "Invalid modality chosen", http.StatusBadRequest)
-// 		return
-// 	}
-// 	fmt.Println(reflect.TypeOf(goal.TargetDistance))
-	
-// 	updateData := bson.M{
-// 		"$set": bson.M{
-// 			"name":            goal.Name,
-// 			"target_distance": float64(goal.TargetDistance),
-// 			"start_date":      int(goal.StartDate),
-// 			"target_date":     int(goal.TargetDate),
-// 			"modality":        goal.Modality,
-// 		},
-// 	}
-// 	log.Println(goal.ID)
-// 	_, err := c.goalsCollection.UpdateByID(context.TODO(), goal.ID, updateData)
-
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	json.NewEncoder(w).Encode("User updated succesfuly")
-// }
 
 // func (c *GoalsController) DeleteGoal(w http.ResponseWriter, r *http.Request) {
 // 	goal := &domain.Goal{}
