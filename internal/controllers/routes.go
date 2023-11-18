@@ -20,16 +20,16 @@ func HandleRequests() {
 	goalsController := NewGoalsController(goalsCollection, workoutsCollection)
 	workoutsController := NewWorkoutsController(workoutsCollection)
 
+	http.HandleFunc("/health_check", healthCheck)
+
 	http.HandleFunc("/users", userController.GetAllUsers)
 	http.HandleFunc("/users/register", userController.registerUser)
 	http.HandleFunc("/users/login", userController.loginUser)
-	http.HandleFunc("/health_check", healthCheck)
 
 	http.HandleFunc("/goals/user/", goalsController.GetAllUserGoals)
 	http.HandleFunc("/goals/create", goalsController.AddGoal)
-	http.HandleFunc("/goals/update", goalsController.UpdateGoal)
-	http.HandleFunc("/goals/delete", goalsController.DeleteGoal)
-	http.HandleFunc("/goals", goalsController.GetAllGoals)
+	// http.HandleFunc("/goals/update", goalsController.UpdateGoal)
+	// http.HandleFunc("/goals/delete", goalsController.DeleteGoal)
 
 	http.HandleFunc("/workouts/user/", workoutsController.GetUserWorkouts)
 	http.HandleFunc("/workouts/create", workoutsController.Addworkout)

@@ -65,9 +65,15 @@ type GoalDto struct {
 	Workouts  []Workout `json:"workouts,omitempty"`
 }
 
+type GoalService interface {
+	FindUserGoals(email string) ([]byte, error)
+	CreateGoal(goal Goal) (*mongo.InsertOneResult, error)
+	UpdateGoal(goal Goal) (*mongo.UpdateResult)
+	DeleteGoal(goal Goal) (*mongo.DeleteResult)
+}
+
 type GoalRepository interface {
-	FindAll() ([]Goal, error)
-	FindOne(id string) (*Goal, error)
+	FindGoalsByEmail(email string) ([]GoalDto, error)
 	Create(goal Goal) (*mongo.InsertOneResult, error)
 	Update(id string) (*mongo.UpdateResult, error)
 	Delete(id string) (*mongo.DeleteResult, error)
