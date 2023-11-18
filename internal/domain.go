@@ -46,9 +46,9 @@ type Goal struct {
 	ID 			 	string 		`json:"id" bson:"_id,omitempty"`
 	UserEmail	 	string  	`json:"user_email" bson:"user_email"`
 	Name		 	string  	`json:"name"`
-	TargetDistance	float64 	`json:"target_distance"`
-	StartDate		int 		`json:"start_date"`
-	TargetDate		int			`json:"target_date"`
+	TargetDistance	float64 	`json:"target_distance" bson:"target_distance"`
+	StartDate		int 		`json:"start_date" bson:"start_date"`
+	TargetDate		int			`json:"target_date" bson:"target_date"`
 	Modality	   	string  	`json:"modality,omitempty"`
 	Workouts  	 	[]Workout   `json:"workouts,omitempty"`
 }
