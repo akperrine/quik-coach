@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
+
 	// "errors"
 	"net/http"
 	"net/http/httptest"
@@ -42,17 +44,29 @@ func (m *MockGoalsService) FindUserGoals(userEmail string) ([]byte, error) {
 
 func (m *MockGoalsService) CreateGoal(goal domain.Goal) (*mongo.InsertOneResult, error) {
 	args := m.Called(goal)
-	return args.Get(0).(*mongo.InsertOneResult), args.Error(1)
+	if result, ok := args.Get(0).(*mongo.InsertOneResult); ok {
+		return result, args.Error(1)
+	}
+
+	return nil, args.Error(1)
 }
 
 func (m *MockGoalsService) UpdateGoal(goal domain.Goal) (*mongo.UpdateResult, error) {
 	args := m.Called(goal)
-	return args.Get(0).(*mongo.UpdateResult), args.Error(1)
+	if result, ok := args.Get(0).(*mongo.UpdateResult); ok {
+		return result, args.Error(1)
+	}
+
+	return nil, args.Error(1)
 }
 
 func (m *MockGoalsService) DeleteGoal(goal domain.Goal) (*mongo.DeleteResult, error) {
 	args := m.Called(goal)
-	return args.Get(0).(*mongo.DeleteResult), args.Error(1)
+	if result, ok := args.Get(0).(*mongo.DeleteResult); ok {
+		return result, args.Error(1)
+	}
+
+	return nil, args.Error(1)
 }
 
 func TestGetUserGoals_UserExist(t *testing.T) {
@@ -112,30 +126,160 @@ func TestGetUserGoals_UserNotExist(t *testing.T) {
 	assert.Equal(t, res.Body.String(), "User not found\n")
 }
 
-// func TestCreateGoal(t *testing.T) {
-//     // Create an instance of the mock
-//     mock := new(MockGoalsService)
+func TestAddGoal(t *testing.T) {
+	// Mock the GoalService
+	mockGoalsService := &MockGoalsService{}  // Adjust this line based on your package structure
+	controller := &GoalsController{
+		GoalService: mockGoalsService,
+	}
 
-//     // Set up expected input and output for the test case
-//     expectedGoal := domain.Goal{
-// 		UserEmail:      "a@example.com",
-// 		Name:           "Run Marathon",
-// 		TargetDistance: 26.6,
-// 		StartDate:      1672531199,
-// 		TargetDate:     1735689599,
-// 		Modality:       "bike",
-//     }
+	// Create a sample goal to be added
+	newGoal := &domain.Goal{
+		UserEmail: "user@example.com",
+		Name:      "New Goal",
+		// Add other fields as needed
+	}
 
-//     expectedResult := map[string]interface{}{}
+	// Marshal the new goal to JSON
+	newGoalJSON, err := json.Marshal(newGoal)
+	if err != nil {
+		t.Fatalf("Error marshaling new goal to JSON: %v", err)
+	}
 
-//     // Configure the mock to return the expected result when CreateGoal is called
-//     mock.On("CreateGoal", expectedGoal).Return(expectedResult, nil)
+	// Mock the CreateGoal method
+	mockGoalsService.On("CreateGoal", *newGoal).Return(nil, nil)
 
-//     // Call the method you are testing with the mock
-//     result := mock.CreateGoal(expectedGoal)
+	// Create a request with the JSON payload
+	req := httptest.NewRequest(http.MethodPost, "/add-goal", bytes.NewBuffer(newGoalJSON))
+	req.Header.Set("Content-Type", "application/json")
 
-//     // Assert that the result matches the expected result
-//     assert.Equal(t, expectedResult, result)
+	// Create a response recorder
+	res := httptest.NewRecorder()
 
-//     mock.AssertExpectations(t)
-// }
+	// Call the AddGoal method
+	controller.AddGoal(res, req)
+
+	// Check the status code
+	assert.Equal(t, http.StatusOK, res.Code)
+
+	// Unmarshal the response body to verify the returned goal
+	var responseGoal domain.Goal
+	err = json.Unmarshal(res.Body.Bytes(), &responseGoal)
+	if assert.NoError(t, err) {
+		// Add assertions for the response body or other checks based on your implementation
+		assert.Equal(t, newGoal.UserEmail, responseGoal.UserEmail)
+		assert.Equal(t, newGoal.Name, responseGoal.Name)
+		// Add assertions for other fields as needed
+	}
+
+	// Assert that the CreateGoal method was called
+	mockGoalsService.AssertExpectations(t)
+}
+
+func TestCreateUserGoal(t *testing.T) {
+	// Mock the GoalService
+	mockGoalsService := &MockGoalsService{}  // Adjust this line based on your package structure
+	controller := &GoalsController{
+		GoalService: mockGoalsService,
+	}
+
+	// Test when creating a user goal
+	expectedResponse := mockGoalJSON
+	var expectedMap map[string]interface{}
+	err := json.Unmarshal([]byte(expectedResponse), &expectedMap)
+	if err != nil {
+		t.Errorf("Error unmarshalling expectedResponse: %s", err)
+	}
+
+	mockGoalsService.On("CreateGoal", mock.AnythingOfType("domain.Goal")).Return(`{"InsertedID":"beec7ec1-be03-47e7-820b-1da0bf8b1003"}`, nil)
+
+	reqBody := []byte(`{
+		"id": "abcdefg",
+		"user_email": "user@example.com",
+		"name": "Run Marathon",
+		"target_distance": 42.2,
+		"start_date": 1677840400,
+		"target_date": 1735689599,
+		"modality": "Run",
+	}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/goals/create", bytes.NewBuffer(reqBody))
+	res := httptest.NewRecorder()
+
+	controller.AddGoal(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, res.Code)
+	}
+
+	mockGoalsService.AssertExpectations(t)
+}
+
+func TestUpdateUserGoal(t *testing.T) {
+	// Mock the GoalService
+	mockGoalsService := &MockGoalsService{}  // Adjust this line based on your package structure
+	controller := &GoalsController{
+		GoalService: mockGoalsService,
+	}
+
+	// Test when updating a user goal
+	expectedResponse := mockGoalJSON
+	var expectedMap map[string]interface{}
+	err := json.Unmarshal([]byte(expectedResponse), &expectedMap)
+	if err != nil {
+		t.Errorf("Error unmarshalling expectedResponse: %s", err)
+	}
+
+	mockGoalsService.On("UpdateGoal", mock.AnythingOfType("domain.Goal")).Return(nil, nil)
+
+	reqBody := []byte(`{
+		"id": "123456789",
+		"user_email": "user@example.com",
+		"name": "Run Marathon",
+		"target_distance": 42.2,
+		"start_date": 1677840400,
+		"target_date": 1735689599,
+		"modality": "Run",
+		"workouts": [
+			{
+				"id": "987654321",
+				"date": 1678000000,
+				"distance": 10.0,
+				"duration": 3600
+			}
+		]
+	}`)
+
+	req := httptest.NewRequest(http.MethodPut, "/goals/update", bytes.NewBuffer(reqBody))
+	res := httptest.NewRecorder()
+
+	controller.UpdateGoal(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, res.Code)
+	}
+
+	mockGoalsService.AssertExpectations(t)
+}
+
+func TestDeleteUserGoal(t *testing.T) {
+	// Mock the GoalService
+	mockGoalsService := &MockGoalsService{}  // Adjust this line based on your package structure
+	controller := &GoalsController{
+		GoalService: mockGoalsService,
+	}
+
+	// Test when deleting a user goal
+	mockGoalsService.On("DeleteGoal", mock.AnythingOfType("domain.Goal")).Return(nil, nil)
+
+	req := httptest.NewRequest(http.MethodDelete, "/goals/delete", nil)
+	res := httptest.NewRecorder()
+
+	controller.DeleteGoal(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, res.Code)
+	}
+
+	mockGoalsService.AssertExpectations(t)
+}

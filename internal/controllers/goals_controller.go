@@ -64,13 +64,13 @@ func (c *GoalsController) AddGoal(w http.ResponseWriter, r *http.Request) {
 	goal := &domain.Goal{}
 	json.NewDecoder(r.Body).Decode(goal)
 
-	response, err := c.GoalService.CreateGoal(*goal)
+	_, err := c.GoalService.CreateGoal(*goal)
 
 	if err != nil {
 		http.Error(w, "Error adding goal", http.StatusBadRequest)
 	}
 
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(goal)
 }
 
 func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {
