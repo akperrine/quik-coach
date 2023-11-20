@@ -68,7 +68,12 @@ func (s *goalService) UpdateGoal(goal domain.Goal) (*mongo.UpdateResult, error) 
 	return result, err
 }
 
-func (*goalService) DeleteGoal(goal domain.Goal) (*mongo.DeleteResult, error) {
-	panic("unimplemented")
+func (s *goalService) DeleteGoal(goal domain.Goal) (*mongo.DeleteResult, error) {
+	// result, err := c.goalsCollection.DeleteOne(context.TODO(), bson.M{"_id": goal.ID})
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return nil, err
+	// }
+	return s.goalRepository.Delete(goal.ID)
 }
 

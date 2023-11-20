@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -75,18 +76,6 @@ func (r *goalRepository) Create(goal domain.Goal) (*mongo.InsertOneResult, error
 }
 
 func (r *goalRepository) Update(goal domain.Goal) (*mongo.UpdateResult, error) {
-	// log.Println(goal)
-	// if _, ok := domain.ModalitySet[goal.Modality]; !ok {
-	// 	http.Error(w, "Invalid modality chosen", http.StatusBadRequest)
-	// 	return
-	// }
-	// fmt.Println(reflect.TypeOf(goal.TargetDistance))
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
-	// 	return
-	// }
 	
 	updateData := bson.M{
 		"$set": bson.M{
@@ -97,21 +86,18 @@ func (r *goalRepository) Update(goal domain.Goal) (*mongo.UpdateResult, error) {
 			"modality":        goal.Modality,
 		},
 	}
-	// log.Println(goal.ID)
-	// _, err := c.goalsCollection.UpdateByID(context.TODO(), goal.ID, updateData)
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
-	// 	return
-	// }
 
 	return r.goalsCollection.UpdateByID(context.TODO(), goal.ID, updateData)
 }
 
 
-func (*goalRepository) Delete(id string) (*mongo.DeleteResult, error) {
-	panic("unimplemented")
+func (r *goalRepository) Delete(id string) (*mongo.DeleteResult, error) {
+	result, err := r.goalsCollection.DeleteOne(context.TODO(), bson.M{"_id": id})
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, nil
 }
 
 

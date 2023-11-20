@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	// "log"
 	"net/http"
 	"strings"
 
@@ -43,7 +45,11 @@ func (c *GoalsController) GetAllUserGoals(w http.ResponseWriter, r *http.Request
 	goalJSON, err := c.GoalService.FindUserGoals(userEmail)
 	if err != nil {
 		http.Error(w, "Error getting user goals", http.StatusBadRequest)
+	} else if string(goalJSON) == "null" {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
 	}
+	// log.Println(s
 
 	writeJSONResponse(w, http.StatusOK, goalJSON)
 
@@ -85,16 +91,22 @@ func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("User updated succesfuly")
 }
 
-// func (c *GoalsController) DeleteGoal(w http.ResponseWriter, r *http.Request) {
-// 	goal := &domain.Goal{}
-// 	json.NewDecoder(r.Body).Decode(goal)
+func (c *GoalsController) DeleteGoal(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-// 	result, err := c.goalsCollection.DeleteOne(context.TODO(), bson.M{"_id": goal.ID})
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		http.Error(w, fmt.Sprintf("Error deleting user: %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
+	goal := &domain.Goal{}
+	json.NewDecoder(r.Body).Decode(goal)
 
-// 	json.NewEncoder(w).Encode(result)
-// }
+	result, err := c.GoalService.DeleteGoal(*goal)
+	
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error deleting user: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(result)
+}
+
