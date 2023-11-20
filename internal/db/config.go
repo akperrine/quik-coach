@@ -23,7 +23,7 @@ func Connect() *mongo.Database{
 		panic(err)
 	}
 
-	if err := client.Database("o2_shark").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Err(); 
+	if err := client.Database("o2_shark").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Err(); 
 	err != nil {
 		panic(err)
 	  }
@@ -31,5 +31,5 @@ func Connect() *mongo.Database{
 	db := client.Database("o2_shark")  
 	
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
-	return db  
+	return db
 }

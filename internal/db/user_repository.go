@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/akperrine/quik-coach/internal/models"
+	domain "github.com/akperrine/quik-coach/internal"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,14 +16,14 @@ type userRepository struct {
 	collection *mongo.Collection
 }
 
-func NewUserRepository(collection *mongo.Collection) models.UserRepository {
+func NewUserRepository(collection *mongo.Collection) domain.UserRepository {
 	return &userRepository{
 		collection: collection,
 	}
 }
 
-func (r *userRepository) FindAll() ([]models.User, error) {
-	users := []models.User{}
+func (r *userRepository) FindAll() ([]domain.User, error) {
+	users := []domain.User{}
 
 	cursor, err := r.collection.Find(context.TODO(), bson.M{})
 	if err != nil {
@@ -33,24 +33,22 @@ func (r *userRepository) FindAll() ([]models.User, error) {
 	defer cursor.Close(context.Background())
 
 	for cursor.Next(context.Background()) {
-		var user models.User
+		var user domain.User
 		if err := cursor.Decode(&user); err != nil {
-			log.Printf("Failed to decode user with error: %s", err)
 			return nil, err
 		}
 		users = append(users, user)
 	}
 
 	if err := cursor.Err(); err != nil {
-		log.Printf("Error during cursor iteration with error: %s", err)
 		return nil, err
 	}
 
 	return users, nil
 }
 
-func (r *userRepository) FindOneByEmail(email string) (*models.User, error) {
-	user := &models.User{}
+func (r *userRepository) FindOneByEmail(email string) (*domain.User, error) {
+	user := &domain.User{}
 	err := r.collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(user)
 	if err != nil {
 		return nil, err
@@ -58,7 +56,7 @@ func (r *userRepository) FindOneByEmail(email string) (*models.User, error) {
 	return user, nil
 }
 
-func (r *userRepository) Create(user models.User) (*mongo.InsertOneResult, error) {
+func (r *userRepository) Create(user domain.User) (*mongo.InsertOneResult, error) {
 	encryptedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		fmt.Println(err)

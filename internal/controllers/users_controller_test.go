@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/akperrine/quik-coach/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -28,7 +28,7 @@ func (m *MockUserService) FindOne(email, password string) map[string]interface{}
 	return args.Get(0).(map[string]interface{})
 }
 
-func (m *MockUserService) CreateUser(user models.User) (*mongo.InsertOneResult, error) {
+func (m *MockUserService) CreateUser(user domain.User) (*mongo.InsertOneResult, error) {
 	args := m.Called(user)
 
 	// Need to check nil because this method returns nil for an object currently
@@ -71,7 +71,7 @@ func TestUserController_RegisterUser(t *testing.T) {
 		UserService: mockUserService,
 	}
 
-	user := &models.User{
+	user := &domain.User{
 		FirstName: "John",
 		LastName:  "Doe",
 		Email:     "john@example.com",
@@ -104,7 +104,7 @@ func TestUserController_LoginUser(t *testing.T) {
 		UserService: mockUserService,
 	}
 
-	user := &models.User{
+	user := &domain.User{
 		Email:    "john@example.com",
 		Password: "password123",
 	}

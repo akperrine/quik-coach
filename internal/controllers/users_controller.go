@@ -6,24 +6,16 @@ import (
 	"net/http"
 
 	"github.com/akperrine/quik-coach/internal/db"
-	"github.com/akperrine/quik-coach/internal/models"
+	"github.com/akperrine/quik-coach/internal"
 	"github.com/akperrine/quik-coach/internal/services"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserController struct {
-	UserService models.UserService 
+	UserService domain.UserService 
 }
 
-var collection *mongo.Collection
-
-func UserCollection(c *mongo.Database) *mongo.Collection {
-	collection = c.Collection("users")
-	return collection
-}
-
-func NewUserController(database *mongo.Database) *UserController {
-	collection := UserCollection(database)
+func NewUserController(collection *mongo.Collection) *UserController {
 
 	// Initialize repository with the MongoDB collection
 	userRepository := db.NewUserRepository(collection)
@@ -39,6 +31,11 @@ func NewUserController(database *mongo.Database) *UserController {
 
 
 func (c *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	users, err := c.UserService.FindAll()
 	if err != nil {
 		writeJSONResponse(w, http.StatusBadRequest, users)
@@ -48,7 +45,12 @@ func (c *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UserController) registerUser(w http.ResponseWriter, r *http.Request) {
-	user := &models.User{}
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := &domain.User{}
 	json.NewDecoder(r.Body).Decode(user)
 
 	_, err := c.UserService.CreateUser(*user)
@@ -63,7 +65,12 @@ func (c *UserController) registerUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UserController) loginUser(w http.ResponseWriter, r *http.Request) {
-	user := &models.User{}
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := &domain.User{}
 	err := json.NewDecoder(r.Body).Decode(user) 
 
 	if err != nil {
