@@ -32,10 +32,10 @@ func HandleRequests() {
 	http.HandleFunc("/goals/delete", goalsController.DeleteGoal)
 
 	http.HandleFunc("/workouts/user/", workoutsController.GetUserWorkouts)
+	http.HandleFunc("/workouts/goal/", workoutsController.GetGoalWorkouts)
 	http.HandleFunc("/workouts/create", workoutsController.Addworkout)
 	http.HandleFunc("/workouts/update", workoutsController.Updateworkout)
 	http.HandleFunc("/workouts/delete", workoutsController.Deleteworkout)
-	http.HandleFunc("/workouts", workoutsController.GetAllWorkouts)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 

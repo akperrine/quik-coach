@@ -1,95 +1,105 @@
 package controllers
 
 import (
-	"context"
-	"encoding/json"
-	"log"
 	"net/http"
-	"time"
+	"strings"
 
 	"github.com/akperrine/quik-coach/internal"
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/akperrine/quik-coach/internal/db"
+	"github.com/akperrine/quik-coach/internal/services"
 	"go.mongodb.org/mongo-driver/mongo"
 	// "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type WorkoutsController struct {
-	workoutCollection *mongo.Collection
+	WorkoutService domain.WorkoutService
 }
 
 
 func NewWorkoutsController(collection *mongo.Collection) *WorkoutsController {
+	workoutRepository := db.NewWorkoutRepository(collection)
+	workoutService := services.NewWorkoutService(workoutRepository)
+
 	return &WorkoutsController{
-		workoutCollection: collection,
+		WorkoutService: workoutService,
 	}
 }
 
-func (c *WorkoutsController) GetAllWorkouts(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Connected to collection: %s\n", c.workoutCollection.Name())
-	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
-	defer cancel()
+func (c *WorkoutsController) GetGoalWorkouts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet{
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-	// Empty filter to retrieve all goals
-	filter := bson.M{}
+	parts := strings.Split(r.URL.Path, "/")
 
-	// findOptions := options.Find()
-	// log.Println("Fetching all workouts...", filter, "\n")
+	if len(parts) < 4 {
+		http.Error(w, "Incorrect path", http.StatusBadRequest)
+		return
+	}
 
-	cursor, err := c.workoutCollection.Find(ctx, filter)
+	goalId := parts[3]
+
+	workoutsJSON, err := c.WorkoutService.FindGoalWorkouts(goalId)
 	if err != nil {
-		// Handle the error, e.g., log it and return an error response
-		http.Error(w, "Error fetching all goals", http.StatusInternalServerError)
-		return
-	}
-	defer cursor.Close(ctx)
-
-	log.Println("Number of documents:", cursor.RemainingBatchLength())
-
-
-	var workouts []domain.Workout
-	for cursor.Next(ctx) {
-		log.Println(cursor)
-		var workout domain.Workout
-		if err := cursor.Decode(&workout); err != nil {
-			// Handle the decoding error, e.g., log it and skip the current document
-			log.Println("cant parse")
-			continue
-		}
-		log.Println(workout)
-		workouts = append(workouts, workout)
-	}
-
-
-	if err := cursor.Err(); err != nil {
-		// Handle the cursor error, e.g., log it and return an error response
-		http.Error(w, "Error fetching all goals", http.StatusInternalServerError)
+		http.Error(w, "Error getting goal workouts", http.StatusBadRequest)
+	} else if string(workoutsJSON) == "null" {
+		http.Error(w, "Goal not found", http.StatusNotFound)
 		return
 	}
 
-	// Marshal the goals to JSON and send the response
-	responseJSON, err := json.Marshal(workouts)
-	if err != nil {
-		// Handle the JSON marshaling error, e.g., log it and return an error response
-		http.Error(w, "Error encoding all goals", http.StatusInternalServerError)
-		return
-	}
-
-	writeJSONResponse(w, http.StatusOK, responseJSON)
+	writeJSONResponse(w, http.StatusOK, workoutsJSON)
 }
 
 func (c *WorkoutsController) GetUserWorkouts(w http.ResponseWriter, r *http.Request) {
-	log.Println("adding wod User...")
+	if r.Method != http.MethodGet{
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.Method != http.MethodGet{
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	parts := strings.Split(r.URL.Path, "/")
+
+	if len(parts) < 4 {
+		http.Error(w, "Incorrect path", http.StatusBadRequest)
+		return
+	}
+
+	goalEmail := parts[3]
+
+	workoutsJSON, err := c.WorkoutService.FindUserWorkouts(goalEmail)
+	if err != nil {
+		http.Error(w, "Error getting goal workouts", http.StatusBadRequest)
+	} else if string(workoutsJSON) == "null" {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	writeJSONResponse(w, http.StatusOK, workoutsJSON)
 }
 
 func (c *WorkoutsController) Addworkout(w http.ResponseWriter, r *http.Request) {
-	log.Println("adding wod...")
+	if r.Method != http.MethodPost{
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 }
 
 func (c *WorkoutsController) Updateworkout(w http.ResponseWriter, r *http.Request) {
-	log.Println("updating wod...")
+	if r.Method != http.MethodPut{
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
 }
 
 func (c *WorkoutsController) Deleteworkout(w http.ResponseWriter, r *http.Request) {
-	log.Println("deleting wod...")
+	if r.Method != http.MethodDelete{
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 }
