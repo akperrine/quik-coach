@@ -20,7 +20,7 @@ func (m *MockGoalRepository) FindGoalsByEmail(email string) ([]domain.GoalDto, e
 }
 
 func (m *MockGoalRepository) Create(goal domain.Goal) (*mongo.InsertOneResult, error) {
-args := m.Called(goal)
+	args := m.Called(goal)
 	if result, ok := args.Get(0).(*mongo.InsertOneResult); ok {
 		return result, args.Error(1)
 	}
