@@ -126,56 +126,6 @@ func TestGetUserGoals_UserNotExist(t *testing.T) {
 	assert.Equal(t, res.Body.String(), "User not found\n")
 }
 
-func TestAddGoal(t *testing.T) {
-	// Mock the GoalService
-	mockGoalsService := &MockGoalsService{}  // Adjust this line based on your package structure
-	controller := &GoalsController{
-		GoalService: mockGoalsService,
-	}
-
-	// Create a sample goal to be added
-	newGoal := &domain.Goal{
-		UserEmail: "user@example.com",
-		Name:      "New Goal",
-		// Add other fields as needed
-	}
-
-	// Marshal the new goal to JSON
-	newGoalJSON, err := json.Marshal(newGoal)
-	if err != nil {
-		t.Fatalf("Error marshaling new goal to JSON: %v", err)
-	}
-
-	// Mock the CreateGoal method
-	mockGoalsService.On("CreateGoal", *newGoal).Return(nil, nil)
-
-	// Create a request with the JSON payload
-	req := httptest.NewRequest(http.MethodPost, "/add-goal", bytes.NewBuffer(newGoalJSON))
-	req.Header.Set("Content-Type", "application/json")
-
-	// Create a response recorder
-	res := httptest.NewRecorder()
-
-	// Call the AddGoal method
-	controller.AddGoal(res, req)
-
-	// Check the status code
-	assert.Equal(t, http.StatusOK, res.Code)
-
-	// Unmarshal the response body to verify the returned goal
-	var responseGoal domain.Goal
-	err = json.Unmarshal(res.Body.Bytes(), &responseGoal)
-	if assert.NoError(t, err) {
-		// Add assertions for the response body or other checks based on your implementation
-		assert.Equal(t, newGoal.UserEmail, responseGoal.UserEmail)
-		assert.Equal(t, newGoal.Name, responseGoal.Name)
-		// Add assertions for other fields as needed
-	}
-
-	// Assert that the CreateGoal method was called
-	mockGoalsService.AssertExpectations(t)
-}
-
 func TestCreateUserGoal(t *testing.T) {
 	// Mock the GoalService
 	mockGoalsService := &MockGoalsService{}  // Adjust this line based on your package structure

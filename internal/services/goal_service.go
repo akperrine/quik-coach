@@ -36,7 +36,6 @@ func (s *goalService) FindUserGoals(email string) ([]byte, error) {
 
 func (s *goalService) CreateGoal(goal domain.Goal) (*mongo.InsertOneResult, error) {
 	if _, ok := domain.ModalitySet[goal.Modality]; !ok {
-		// http.Error(w, "Invalid modality chosen", http.StatusBadRequest)
 		return nil, fmt.Errorf("invalid modality")
 	}
 
@@ -62,18 +61,12 @@ func (s *goalService) UpdateGoal(goal domain.Goal) (*mongo.UpdateResult, error) 
 
 	if err != nil {
 		fmt.Println(err)
-		// http.Error(w, fmt.Sprintf("Error creating new user: %s", err), http.StatusInternalServerError)
 		return nil, err
 	}
 	return result, err
 }
 
 func (s *goalService) DeleteGoal(goal domain.Goal) (*mongo.DeleteResult, error) {
-	// result, err := c.goalsCollection.DeleteOne(context.TODO(), bson.M{"_id": goal.ID})
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return nil, err
-	// }
 	return s.goalRepository.Delete(goal.ID)
 }
 

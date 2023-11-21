@@ -2,8 +2,10 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 
 	domain "github.com/akperrine/quik-coach/internal"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -46,17 +48,39 @@ func (s *workoutService) FindUserWorkouts(email string) ([]byte, error) {
 	return responseJSON, nil
 }
 
-func (*workoutService) CreateWorkout(Wwrkout domain.Workout) (*mongo.InsertOneResult, error) {
-	panic("unimplemented")
+func (s *workoutService) CreateWorkout(workout domain.Workout) (*mongo.InsertOneResult, error) {
+	if _, ok := domain.ModalitySet[workout.Modality]; !ok {
+		return nil, fmt.Errorf("invalid modality")
+	}
+
+	workout.ID = uuid.NewString()
+
+	result, err := s.workoutRepository.Create(workout)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	} 
+	return result, nil
 }
 
-// DeleteWorkout implements domain.WorkoutService.
-func (*workoutService) DeleteWorkout(workout domain.Workout) (*mongo.DeleteResult, error) {
-	panic("unimplemented")
+func (s *workoutService) UpdateWorkout(workout domain.Workout) (*mongo.UpdateResult, error) {
+	if _, ok := domain.ModalitySet[workout.Modality]; !ok {
+		return nil, fmt.Errorf("invalid modality")
+	}
+
+	result, err := s.workoutRepository.Update(workout)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, err
 }
 
-// UpdateWorkout implements domain.WorkoutService.
-func (*workoutService) UpdateWorkout(workout domain.Workout) (*mongo.UpdateResult, error) {
-	panic("unimplemented")
+func (s *workoutService) DeleteWorkout(workout domain.Workout) (*mongo.DeleteResult, error) {
+	return s.workoutRepository.Delete(workout.ID)
 }
+
+
 

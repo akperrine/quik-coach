@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"log"
 	"time"
 
 	domain "github.com/akperrine/quik-coach/internal"
@@ -47,18 +48,6 @@ func (r *workoutRepository) FindByGoal(id string) ([]domain.Workout, error) {
     return workouts, nil
 }
 
-
-// Create implements domain.WorkoutRepository.
-func (*workoutRepository) Create(worokout domain.Workout) (*mongo.InsertOneResult, error) {
-	panic("unimplemented")
-}
-
-// Delete implements domain.WorkoutRepository.
-func (*workoutRepository) Delete(id string) (*mongo.DeleteResult, error) {
-	panic("unimplemented")
-}
-
-// FindByEmail implements domain.WorkoutRepository.
 func (r *workoutRepository) FindByEmail(email string) ([]domain.Workout, error) {
 	
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
@@ -88,8 +77,27 @@ func (r *workoutRepository) FindByEmail(email string) ([]domain.Workout, error) 
     return workouts, nil
 }
 
-// Update implements domain.WorkoutRepository.
-func (*workoutRepository) Update(workout domain.Workout) (*mongo.UpdateResult, error) {
-	panic("unimplemented")
+func (r *workoutRepository) Create(worokout domain.Workout) (*mongo.InsertOneResult, error) {
+	return r.workoutCollection.InsertOne(context.TODO(), worokout)
 }
 
+func (r *workoutRepository) Update(workout domain.Workout) (*mongo.UpdateResult, error) {
+	updateData := bson.M{
+		"$set": bson.M{
+			"distance": workout.Distance,
+			"date": workout.Date,
+			"modality": workout.Modality,
+		},
+	}
+
+	return r.workoutCollection.UpdateByID(context.TODO(), workout.ID, updateData)
+}
+
+func (r *workoutRepository) Delete(id string) (*mongo.DeleteResult, error) {
+	result, err := r.workoutCollection.DeleteOne(context.TODO(), bson.M{"_id": id})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return result, nil
+}

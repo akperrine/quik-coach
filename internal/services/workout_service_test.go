@@ -49,17 +49,20 @@ func (m *MockWorkoutsRepository) Update(workout domain.Workout) (*mongo.UpdateRe
 	return nil, args.Error(1)
 }
 
+var mockWorkout = domain.Workout{
+	ID:        "1",
+	GoalID:    "goal123",
+	UserEmail: "user@example.com",
+	Distance:  10.5,
+	Date:      1678000000,
+	Modality:  "run",
+}
+
 func TestFindUserWorkouts(t *testing.T) {
 	mockRepository := &MockWorkoutsRepository{}
 	service := NewWorkoutService(mockRepository)
 
-	expectedWorkouts := []domain.Workout{
-		{ID:        "1",
-		GoalID:    "goal123",
-		UserEmail: "user@example.com",
-		Distance:  10.5,
-		Date:      1678000000,
-		Modality:  "run",},
+	expectedWorkouts := []domain.Workout {mockWorkout,
 	}
 
 	mockRepository.On("FindByEmail", "user@example.com").Return(expectedWorkouts,nil)
@@ -95,5 +98,23 @@ func TestFindGoalWorkouts(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t,expectedWorkouts, resultWorkouts)
+	mockRepository.AssertExpectations(t)
+}
+
+func TestCreatWorkout(t *testing.T) {
+	mockRepository := &MockWorkoutsRepository{}
+	service := NewWorkoutService(mockRepository)
+
+	// Mock the repository to return a sample InsertOneResult
+	expectedResult := &mongo.InsertOneResult{
+		InsertedID: "12345",
+	}
+
+	mockRepository.On("Create", mock.AnythingOfType("domain.Workout")).Return(expectedResult, nil)
+
+	result, err := service.CreateWorkout(mockWorkout)
+	assert.NoError(t, err)
+	assert.NotNil(t, result.InsertedID)	
+	assert.Equal(t, expectedResult.InsertedID, result.InsertedID)
 	mockRepository.AssertExpectations(t)
 }

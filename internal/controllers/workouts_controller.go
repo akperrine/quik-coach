@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -87,6 +90,25 @@ func (c *WorkoutsController) Addworkout(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	workout := &domain.Workout{}
+	json.NewDecoder(r.Body).Decode(workout)
+
+	result, err := c.WorkoutService.CreateWorkout(*workout)
+	log.Println("hIIII", result)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Error adding workout", http.StatusBadRequest)
+	}
+
+	insertedID, ok := result.InsertedID.(string)
+	if !ok {
+		log.Println(err)
+		http.Error(w, "Error asserting InsertedID", http.StatusInternalServerError)
+	}
+	
+	workout.ID = insertedID
+	json.NewEncoder(w).Encode(workout)
 }
 
 func (c *WorkoutsController) Updateworkout(w http.ResponseWriter, r *http.Request) {
@@ -95,6 +117,16 @@ func (c *WorkoutsController) Updateworkout(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	workout := &domain.Workout{}
+	json.NewDecoder(r.Body).Decode(workout)
+
+	_, err := c.WorkoutService.UpdateWorkout(*workout)
+
+	if err != nil {
+		http.Error(w, "Error updating user", http.StatusBadRequest)
+	}
+
+	json.NewEncoder(w).Encode("Workout updated succesfuly")
 }
 
 func (c *WorkoutsController) Deleteworkout(w http.ResponseWriter, r *http.Request) {
@@ -102,4 +134,16 @@ func (c *WorkoutsController) Deleteworkout(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	workout := &domain.Workout{}
+	json.NewDecoder(r.Body).Decode(workout)
+
+	result, err := c.WorkoutService.DeleteWorkout(*workout)
+	
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error deleting user: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(result)
 }
