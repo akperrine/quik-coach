@@ -85,10 +85,10 @@ func (c *GoalsController) UpdateGoal(w http.ResponseWriter, r *http.Request) {
 	_, err := c.GoalService.UpdateGoal(*goal)
 
 	if err != nil {
-		http.Error(w, "Error updating user", http.StatusBadRequest)
+		http.Error(w, "Error updating goal", http.StatusBadRequest)
 	}
 
-	json.NewEncoder(w).Encode("User updated succesfuly")
+	json.NewEncoder(w).Encode("Goal updated succesfuly")
 }
 
 func (c *GoalsController) DeleteGoal(w http.ResponseWriter, r *http.Request) {

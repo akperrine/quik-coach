@@ -88,3 +88,18 @@ type Workout struct {
 	Modality	string 		`json:"modality"`
 }
 
+type WorkoutService interface {
+	FindUserWorkouts(email string) ([]byte, error)
+	FindGoalWorkouts(id string) ([]byte, error)
+	CreateWorkout(Wwrkout Workout) (*mongo.InsertOneResult, error)
+	UpdateWorkout(workout Workout) (*mongo.UpdateResult, error)
+	DeleteWorkout(workout Workout) (*mongo.DeleteResult, error)
+}
+
+type WorkoutRepository interface {
+	FindByEmail(email string) ([]Workout, error)
+	FindByGoal(id string) ([]Workout, error)
+	Create(worokout Workout) (*mongo.InsertOneResult, error)
+	Update(workout Workout) (*mongo.UpdateResult, error)
+	Delete(id string) (*mongo.DeleteResult, error)
+}
