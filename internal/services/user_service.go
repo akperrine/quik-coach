@@ -67,17 +67,17 @@ func (s *userService) FindOne(email, password string) map[string]interface{}{
 		return resp
     }
 
-	tokenString, tokenError := CreateToken(*user) 
+	// tokenString, tokenError := CreateToken(*user, w) 
 
-	if tokenError != nil {
-		var resp = map[string]interface{}{"status": false, "message": "Error creating token", "error": tokenError}
-		return resp
-	}
+	// if tokenError != nil {
+	// 	var resp = map[string]interface{}{"status": false, "message": "Error creating token", "error": tokenError}
+	// 	return resp
+	// }
 
 	user.Password = ""
 	
 	var resp = map[string]interface{}{"status": false, "message": "logged in"}
-	resp["token"] = tokenString //Store the token in the response
+	// resp["token"] = tokenString //Store the token in the response
 	resp["user"] = user
 	return resp
 }

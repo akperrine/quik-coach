@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -15,6 +14,7 @@ type goalRepository struct {
 	goalsCollection *mongo.Collection
 	workoutCollection *mongo.Collection
 }
+
 
 func NewGoalRepository(goalsCollection , workoutCollection *mongo.Collection) domain.GoalRepository {
 	return &goalRepository{
@@ -92,12 +92,21 @@ func (r *goalRepository) Update(goal domain.Goal) (*mongo.UpdateResult, error) {
 
 
 func (r *goalRepository) Delete(id string) (*mongo.DeleteResult, error) {
-	result, err := r.goalsCollection.DeleteOne(context.TODO(), bson.M{"_id": id})
+	filter := bson.M{"goal_id": id}
+	update := bson.M{"$set": bson.M{"goal_id": ""}}
+
+	_, err := r.workoutCollection.UpdateMany(context.TODO(), filter, update)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
-	return result, nil
+
+	deleteResult, err := r.goalsCollection.DeleteOne(context.TODO(), bson.M{"_id": id})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return deleteResult, nil
 }
 
 
