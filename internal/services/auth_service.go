@@ -39,7 +39,6 @@ func CreateToken(user domain.User, w http.ResponseWriter) (error) {
 		SameSite: http.SameSiteNoneMode,
 		Path: "/",
 		Secure:   true, 
-		// Domain: "",
 	}
 	log.Println(cookie)
 	http.SetCookie(w, &cookie)

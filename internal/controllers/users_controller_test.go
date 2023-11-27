@@ -98,31 +98,39 @@ func TestUserController_RegisterUser(t *testing.T) {
 
 func TestUserController_LoginUser(t *testing.T) {
 	mockUserService := new(MockUserService)
-	mockUserService.On("FindOne", "john@example.com", "password123").Return(map[string]interface{}{"status": true}, nil)
-
 	userController := &UserController{
 		UserService: mockUserService,
 	}
 
-	user := &domain.User{
-		Email:    "john@example.com",
-		Password: "password123",
+	mockUser := &domain.User{
+		ID:        "1",
+		FirstName: "A",
+		LastName:  "Wade",
+		Email:     "john@example.com",
 	}
 
-	userJSON, err := json.Marshal(user)
+	mockUserService.On("FindOne", "john@example.com", "password123").Return(map[string]interface{}{"message":"logged in",
+	"status": true, 
+	"user": mockUser,
+	}, nil)
+
+	
+	reqBody := []byte(`{
+		"email": "john@example.com",
+		"password": "password123"
+	}`)
+
+	req, err := http.NewRequest(http.MethodPost, "/users/login", bytes.NewBuffer(reqBody))
 	assert.NoError(t, err)
 
-	req, err := http.NewRequest("POST", "/users/login", bytes.NewReader(userJSON))
-	assert.NoError(t, err)
+	res := httptest.NewRecorder()
+	
+	userController.loginUser(res, req)
 
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(userController.loginUser)
-	handler.ServeHTTP(recorder, req)
-
-	assert.Equal(t, http.StatusOK, recorder.Code)
+	assert.Equal(t, http.StatusOK, res.Code)
 
 	var response map[string]interface{}
-	err = json.Unmarshal(recorder.Body.Bytes(), &response)
+	err = json.Unmarshal(res.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, true, response["status"])
 }
