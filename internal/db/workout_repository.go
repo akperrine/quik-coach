@@ -14,6 +14,7 @@ type workoutRepository struct {
 	workoutCollection *mongo.Collection
 }
 
+
 func NewWorkoutRepository(workoutCollection *mongo.Collection) domain.WorkoutRepository {
 	return &workoutRepository{
 		workoutCollection: workoutCollection,
@@ -21,31 +22,11 @@ func NewWorkoutRepository(workoutCollection *mongo.Collection) domain.WorkoutRep
 }
 
 func (r *workoutRepository) FindByGoal(id string) ([]domain.Workout, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
-	defer cancel()
-
-	filter := bson.M{"goal_id": id}
-
-	cursor, err := r.workoutCollection.Find(ctx, filter)
-    if err != nil {
+	workouts, err := FindWorkoutsByGoalId(id, r.workoutCollection)
+	if err != nil {
         return nil, err
     }
-    defer cursor.Close(ctx)
-
-	var workouts []domain.Workout
-    for cursor.Next(ctx) {
-        var workout domain.Workout
-        if err := cursor.Decode(&workout); err != nil {
-            return nil, err
-        }
-        workouts = append(workouts, workout)
-    }
-
-    if err := cursor.Err(); err != nil {
-        return nil, err
-    }
-
-    return workouts, nil
+	return workouts, nil
 }
 
 func (r *workoutRepository) FindByEmail(email string) ([]domain.Workout, error) {
@@ -94,10 +75,40 @@ func (r *workoutRepository) Update(workout domain.Workout) (*mongo.UpdateResult,
 }
 
 func (r *workoutRepository) Delete(id string) (*mongo.DeleteResult, error) {
+
 	result, err := r.workoutCollection.DeleteOne(context.TODO(), bson.M{"_id": id})
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	return result, nil
+}
+
+// Helper functions
+func FindWorkoutsByGoalId(id string, collection *mongo.Collection) ([]domain.Workout, error) {
+ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+defer cancel()
+
+filter := bson.M{"goal_id": id}
+
+cursor, err := collection.Find(ctx, filter)
+if err != nil {
+	return nil, err
+}
+defer cursor.Close(ctx)
+
+var workouts []domain.Workout
+for cursor.Next(ctx) {
+	var workout domain.Workout
+	if err := cursor.Decode(&workout); err != nil {
+		return nil, err
+	}
+	workouts = append(workouts, workout)
+}
+
+if err := cursor.Err(); err != nil {
+	return nil, err
+}
+
+return workouts, nil
 }

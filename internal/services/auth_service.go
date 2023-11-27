@@ -2,13 +2,15 @@ package services
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"time"
 
 	"github.com/akperrine/quik-coach/internal"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func CreateToken(user domain.User) (string, error) {
+func CreateToken(user domain.User, w http.ResponseWriter) (error) {
 	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Minute * 100000))
 
 
@@ -29,7 +31,19 @@ func CreateToken(user domain.User) (string, error) {
 		fmt.Println(error)
 	}
 
-	return tokenString, nil
+	cookie := http.Cookie{
+		Name:     "auth",
+		Value:    tokenString,
+		MaxAge:  int(time.Now().Add(time.Minute * 100000).Unix()),
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+		Path: "/",
+		Secure:   true, 
+	}
+	log.Println(cookie)
+	http.SetCookie(w, &cookie)
+
+	return nil
 }
 
 func VerifyToken(tokenString string) error {
